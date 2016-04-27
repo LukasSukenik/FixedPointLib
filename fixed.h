@@ -17,3 +17,5 @@ public:
     Fixed& operator++(); // prefix
     Fixed& operator--();
 };
+
+//komentar
