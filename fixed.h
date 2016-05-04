@@ -215,11 +215,29 @@ public:
 
     Fixed operator% (Fixed o) = delete; // works only for integers
 
-    Fixed operator++ (int); // postfix
-    Fixed operator-- (int );
+    Fixed operator++ (int) { // postfix
+        Fixed tmp(*this);
+        ++(*this);
+        return tmp;
+    }
+    Fixed operator-- (int ) {
+        Fixed tmp(*this);
+        --(*this);
+        return tmp;
+    }
 
-    Fixed& operator++ (); // prefix
-    Fixed& operator-- ();
+    Fixed& operator++ () { // prefix
+        uintInf_t inc = this->scale;
+        inc.negative = false;
+        this->num = this->num + inc;
+        return *this;
+    }
+    Fixed& operator-- () {
+        uintInf_t inc = this->scale;
+        inc.negative = true;
+        this->num = this->num + inc;
+        return *this;
+    }
 
     bool operator== (const Fixed& o);
     bool operator!= (const Fixed& o);
@@ -249,14 +267,8 @@ public:
 private:
     // https://en.wikipedia.org/wiki/Fixed-point_arithmetic
     //
-    //  negative numbers -> negative scale
-    //
-    //  neccessary for easy operations implementation
-    //
-
     uintInf_t num;   // numerator, only last 32 bits are valid, rest 0
     uintInf_t scale; // denominator
-
 
     int valid;
     int ibase; // input base, 2 to 16
