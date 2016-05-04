@@ -5,10 +5,11 @@
 #include <vector>
 #include <cstdint>
 #include <algorithm>
+#include <bitset>
 
 using namespace std;
 
-class uintInf_t : vector<uint64_t> {
+class uintInf_t : public vector<uint64_t> {
 public:
 
     bool operator== (const int& o) {
@@ -16,18 +17,34 @@ public:
     }
 
     bool operator!= (const int& o) {
-        return false;
+        if(this->empty() || o < 0 || this->size() > 1)
+            return true;
+        return o != this->operator [](0);
     }
 
-    uintInf_t& operator= (uintInf_t o) {
-        return o;
-    }
+    //uintInf_t& operator= (uintInf_t o) inherited
 
     uintInf_t operator% (uintInf_t o) {
         return o;
     }
 
-    uintInf_t operator+ (uintInf_t o);
+    uintInf_t operator+ (uintInf_t o) {
+        uintInf_t result;
+        result.resize(std::max(o.size(), this->size()));
+
+        for(auto item : result) {
+            item = 0;
+        }
+        for(unsigned int i=0; i<o.size(); i++) {
+            result[i] += o[i];
+        }
+        for(unsigned int i=0; i<this->size(); i++) {
+            result[i] += this->operator [](i);
+        }
+        result.propagate();
+        return result;
+    }
+
     uintInf_t operator- (uintInf_t o);
 
     uintInf_t operator* (uintInf_t o)  {
@@ -38,11 +55,30 @@ public:
         return o;
     }
 
+    void print() {
+        for(auto item : *this) {
+            cout << item << " ";
+        }
+        cout << endl;
+    }
 
+private:
+    /**
+     * @brief propagate set the vector elements so that first 32 bits are 0
+     */
+    void propagate() {
+        uint64_t temp = 0;
+        for(auto& item : *this) {
+            item += temp;
+            temp = item;
+            temp >>= 32;
+            item <<= 32;
+            item >>= 32;
+        }
+        if(temp != 0)
+            this->push_back(temp);
+    }
 };
-
-uintInf_t gcd ( uintInf_t a, uintInf_t b );
-uintInf_t lcm ( uintInf_t a, uintInf_t b );
 
 class Fixed {
 public:
@@ -61,11 +97,7 @@ public:
         return *this;
     }
 
-    Fixed operator+ (Fixed o) {
-
-        // unify scale -> Least common multiple
-
-    }
+    Fixed operator+ (Fixed o);
 
     Fixed operator- (Fixed o);
 
@@ -121,48 +153,3 @@ private:
     int ibase; // input base, 2 to 16
     int obase; // outputbase, 2 to 999
 };
-
-/*
-
-Copyright (c) 2011, Louis-Philippe Lessard
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
-/**
-* Find the greatest common divisor of 2 numbers
-* See http://en.wikipedia.org/wiki/Greatest_common_divisor
-*
-* @param[in] a First number
-* @param[in] b Second number
-* @return greatest common divisor
-*/
-uintInf_t gcd ( uintInf_t a, uintInf_t b )
-{
-    uintInf_t c;
-    while ( a != 0 )
-    {
-        c = a;
-        a = b%a;
-        b = c;
-    }
-    return b;
-}
-
-/**
-* Find the least common multiple of 2 numbers
-* See http://en.wikipedia.org/wiki/Least_common_multiple
-*
-* @param[in] a First number
-* @param[in] b Second number
-* @return least common multiple
-*/
-uintInf_t lcm(uintInf_t a, uintInf_t b)
-{
-    return (b / gcd(a, b) ) * a;
-}
