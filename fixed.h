@@ -79,7 +79,32 @@ public:
     }
 
     uintInf_t operator* (uintInf_t o)  {
-        return o;
+        uintInf_t result[ std::max(o.size(), this->size()) ];
+        for(auto& item : result) {
+            item.resize( o.size() * this->size() );
+        }
+
+        int batch = 0;
+        for(unsigned int i=0; i < ( o.size() * this->size() ) ; ++i) {
+            result[batch][i] = 0;
+            for(unsigned int j=0; j<o.size(); ++j) {
+                for(unsigned int k=0; k<this->size(); ++k) {
+                    if(i == (j+k)) {
+                        result[batch][i] += o[j] * this->operator [](k);
+                        ++batch;
+                    }
+                }
+            }
+            batch = 0;
+        }
+        for(auto& item : result) {
+            item.propagateUP();
+        }
+        for(int i=1; i<std::max(o.size(), this->size()); i++) {
+            result[0] = result[0] + result[i];
+        }
+        result[0].negative = this->negative;
+        return result[0];
     }
 
     uintInf_t operator/ (uintInf_t o) {
