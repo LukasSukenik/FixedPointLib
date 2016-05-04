@@ -11,6 +11,7 @@ using namespace std;
 
 class uintInf_t : public vector<uint64_t> {
 public:
+    bool negative = false;          // negative == true -> number < 0
 
     bool operator== (const int& o) {
         return !this->operator !=(o);
@@ -28,7 +29,10 @@ public:
         return o;
     }
 
-    uintInf_t operator+ (uintInf_t o) {
+    uintInf_t operator+ (uintInf_t o) { // work only for all positive or all negative numbers
+        if(this->negative != o.negative) {
+            // TODO: use operator -
+        }
         uintInf_t result;
         result.resize(std::max(o.size(), this->size()));
 
@@ -41,11 +45,38 @@ public:
         for(unsigned int i=0; i<this->size(); i++) {
             result[i] += this->operator [](i);
         }
-        result.propagate();
+        result.propagateUP();
+        result.negative = this->negative;
         return result;
     }
 
-    uintInf_t operator- (uintInf_t o);
+    uintInf_t operator- (uintInf_t o) { //
+        if(this->negative != o.negative) {
+            // TODO: use operator +
+        }
+
+        uintInf_t *big, *small;
+        uintInf_t result;
+
+        // this has more numbers -> bigger, || ( a && this is only evaluated is a == true)
+        if(this->size() > o.size() || (this->size() == o.size() && this->back() > o.back())) {
+            big = this;
+            small = &o;
+        } else {
+            big = &o;
+            small = this;
+        }
+
+        result = *big;
+        result.bitShiftUp();
+
+        for(unsigned int i=0; i<small->size(); i++) {
+            result[i] = ((*small)[i] << 32);
+        }
+
+        result.propagateDown();
+        return result;
+    }
 
     uintInf_t operator* (uintInf_t o)  {
         return o;
@@ -66,7 +97,7 @@ private:
     /**
      * @brief propagate set the vector elements so that first 32 bits are 0
      */
-    void propagate() {
+    void propagateUP() {
         uint64_t temp = 0;
         for(auto& item : *this) {
             item += temp;
@@ -78,6 +109,28 @@ private:
         if(temp != 0)
             this->push_back(temp);
     }
+
+    // TODO: finish
+    void propagateDown() {
+        uint64_t temp = 0;
+        for(auto& item : *this) {
+            if(item < UINT32_MAX) {
+                item += UINT32_MAX;
+            }
+        }
+    }
+
+    void bitShiftUp() {
+        for(auto& item : *this) {
+            item <<= 32;
+        }
+    }
+
+    void bitShiftDown() {
+        for(auto& item : *this) {
+            item >>= 32;
+        }
+    }
 };
 
 class Fixed {
@@ -87,7 +140,6 @@ public:
     }
 
     Fixed& operator= (Fixed o) {
-        swap(this->negative, o.negative);
         swap(this->num,   o.num);
         swap(this->scale, o.scale);
         swap(this->valid, o.valid);
@@ -97,9 +149,25 @@ public:
         return *this;
     }
 
-    Fixed operator+ (Fixed o);
+    Fixed operator+ (Fixed o) {
+        // set apropriate denumarator (scale), multiply (best is solution is largest common multiple)
 
-    Fixed operator- (Fixed o);
+        // multiply the num according to new scale
+
+        // add nums
+        o.num = this->num + o.num;
+        return o;
+    }
+
+    Fixed operator- (Fixed o) {
+        // set apropriate denumarator (scale)
+
+        // multiply the num according to new scale
+
+        // subtract nums
+        o.num = this->num - o.num;
+        return o;
+    }
 
     Fixed operator* (Fixed o);
     Fixed operator/ (Fixed o);
@@ -144,7 +212,7 @@ private:
     //
     //  neccessary for easy operations implementation
     //
-    bool negative;          // negative == true -> number < 0
+
     uintInf_t num;   // numerator, only last 32 bits are valid, rest 0
     uintInf_t scale; // denominator
 
