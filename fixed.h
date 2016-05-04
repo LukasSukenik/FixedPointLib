@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <bitset>
+#include <cassert>
 
 using namespace std;
 
@@ -32,6 +33,7 @@ public:
     uintInf_t operator+ (uintInf_t o) { // work only for all positive or all negative numbers
         if(this->negative != o.negative) {
             // TODO: use operator -
+            assert(false);
         }
         uintInf_t result;
         result.resize(std::max(o.size(), this->size()));
@@ -53,6 +55,7 @@ public:
     uintInf_t operator- (uintInf_t o) { //
         if(this->negative != o.negative) {
             // TODO: use operator +
+            assert(false);
         }
 
         uintInf_t *big, *small;
@@ -103,7 +106,7 @@ public:
         for(int i=1; i<std::max(o.size(), this->size()); i++) {
             result[0] = result[0] + result[i];
         }
-        result[0].negative = this->negative;
+        result[0].negative = (this->negative == o.negative) ? false : true;
         return result[0];
     }
 
@@ -175,10 +178,11 @@ public:
     }
 
     Fixed operator+ (Fixed o) {
-        // set apropriate denumarator (scale), multiply (best is solution is largest common multiple)
-
+        // set apropriate denumarator (scale), multiply (TODO largest common multiple)
+        o.scale = o.scale * this->scale;
         // multiply the num according to new scale
-
+        o.num = o.num * this->scale;
+        this->num = this->num * o.scale;
         // add nums
         o.num = this->num + o.num;
         return o;
@@ -186,16 +190,28 @@ public:
 
     Fixed operator- (Fixed o) {
         // set apropriate denumarator (scale)
-
+        o.scale = o.scale * this->scale;
         // multiply the num according to new scale
-
+        o.num = o.num * this->scale;
+        this->num = this->num * o.scale;
         // subtract nums
         o.num = this->num - o.num;
         return o;
     }
 
-    Fixed operator* (Fixed o);
-    Fixed operator/ (Fixed o);
+    Fixed operator* (Fixed o) {
+        o.scale = o.scale * this->scale;
+        o.num = o.num * this->num;
+        // TODO: Make the fraction so that it doesnt have common divisors
+        return o;
+    }
+
+    Fixed operator/ (Fixed o) {
+        o.scale = o.scale * this->num;
+        o.num = o.num * this->scale;
+        // TODO: Make the fraction so that it doesnt have common divisors
+        return o;
+    }
 
     Fixed operator% (Fixed o) = delete; // works only for integers
 
