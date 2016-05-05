@@ -67,6 +67,7 @@ public:
         return !this->operator< (o);
     }
 
+
     bool operator== (const int& o) {
         assert(this->back() != 0);
         return !this->operator !=(o);
@@ -82,6 +83,10 @@ public:
     //uintInf_t& operator= (uintInf_t o) inherited
 
     uintInf_t operator% (uintInf_t o) {
+        return o;
+    }
+
+    uintInf_t operator/ (uintInf_t o) { // TODO: Long division algorithm
         return o;
     }
 
@@ -190,17 +195,6 @@ public:
         return result[0];
     }
 
-    uintInf_t operator/ (uintInf_t o) { // TODO: Long division algorithm
-        return o;
-    }
-
-    void print() {
-        for(auto item : *this) {
-            cout << item << " ";
-        }
-        cout << endl;
-    }
-
 private:
     /**
      * @brief propagate set the vector elements so that first 32 bits are 0
@@ -226,6 +220,12 @@ private:
 
 
 };
+
+std::ostream& operator<<(std::ostream& o, const uintInf_t& u) {
+    for(auto rIt = u.rbegin(); rIt != u.rend(); ++rIt)
+        o << bitset<32>(*rIt);
+    return o;
+}
 
 class Fixed {
 public:
