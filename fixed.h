@@ -80,7 +80,9 @@ public:
     //uintInf_t& operator= (uintInf_t o) inherited
 
     uintInf_t operator% (uintInf_t o) {
-        return o;
+        uintInf_t rem;
+        division3(*this,o, &rem);
+        return rem;
     }
 
     uintInf_t operator <<= (const unsigned int shift) {
@@ -148,9 +150,8 @@ public:
 
     uintInf_t operator/ (uintInf_t o) { // TODO: Long division algorithm
         assert(!o.empty() && "Division by zero");
-        if(o.size() == 1 && o.back()==1)
-            return *this;
-        return o;
+        uintInf_t rem;
+        return division3(*this, o, &rem);
     }
 
     uintInf_t operator+ (uintInf_t o) {
@@ -296,14 +297,12 @@ uintInf_t gcd (uintInf_t n1, uintInf_t n2) {
     uintInf_t tmp;
     n1.negative = false;
     n2.negative = false;
-    /*while (n2 != 0) {
+    while (n2 != 0) {
         tmp = n1;
         n1 = n2;
         n2 = tmp % n2;
     }
-    return n1;*/
-    tmp.push_back(1);
-    return tmp;
+    return n1;
 }
 
 class Fixed {

@@ -94,11 +94,11 @@ uint64_t division2(uint64_t dividend, uint64_t divisor, uint64_t * remainder) {
 
 int main()
 {
-    //cout << "inf int addition and comparison, only 64bit and positive: " << std::boolalpha << test() << endl;
-    //cout << "inf int multiplication, only 64bit and positive: " << std::boolalpha << testMult() << endl;
-    //cout << "inf int subtraction, only 64bit and positive: " << std::boolalpha << testMinus() << endl;
-    //cout << "Easy Fixed test, only 64bit and positive: " << std::boolalpha << testFixed1() << endl;
-    //cout << "shift operators test : " << std::boolalpha << shiftOperatorsTest() << endl;
+    cout << "inf int addition and comparison, only 64bit and positive: " << std::boolalpha << test() << endl;
+    cout << "inf int multiplication, only 64bit and positive: " << std::boolalpha << testMult() << endl;
+    cout << "inf int subtraction, only 64bit and positive: " << std::boolalpha << testMinus() << endl;
+    cout << "Easy Fixed test, only 64bit and positive: " << std::boolalpha << testFixed1() << endl;
+    cout << "shift operators test : " << std::boolalpha << shiftOperatorsTest() << endl;
     cout << "division algo test : " << std::boolalpha << divisionAlgoTest() << endl;
 
     return 0;
@@ -145,7 +145,7 @@ bool divisionAlgoTest() {
     uintInf_t rem;
     uint64_t correct = 0;
     uintInf_t res;
-    const uint64_t steps = 1000*100;
+    const uint64_t steps = 1000*10;
 
     for(uint64_t i=0; i<steps; ++i) {
         n = rand();
