@@ -141,7 +141,8 @@ public:
             divisor = origdiv;
         }
 
-        assert(sum_q.back() != 0);
+
+        assert(sum_q.empty() || sum_q.back() != 0);
         return sum_q;
     }
 

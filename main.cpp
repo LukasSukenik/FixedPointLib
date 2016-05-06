@@ -145,13 +145,13 @@ bool divisionAlgoTest() {
     uintInf_t rem;
     uint64_t correct = 0;
     uintInf_t res;
-    const uint64_t steps = 1000*10;
+    const uint64_t steps = 1000*100;
 
     for(uint64_t i=0; i<steps; ++i) {
         n = rand();
         n = n * (2<<20);
         d = rand();
-        d = d * (2<<20);
+        //d = d * (2<<20);
         rem = 0;
         //res = division(n,d,d,&rem);
         res = n.division3(n,d,&rem);
