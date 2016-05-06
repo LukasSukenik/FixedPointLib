@@ -15,6 +15,8 @@ bool testMult();
 bool testMinus();
 bool testComp();
 bool testFixed1();
+bool divisionAlgoTest();
+bool shiftOperatorsTest();
 
 uint64_t merge(uint32_t i, uint32_t j) {
     uint64_t result = i;
@@ -22,14 +24,147 @@ uint64_t merge(uint32_t i, uint32_t j) {
     return result + j;
 }
 
+uint64_t division(uint64_t dividend, uint64_t divisor, uint64_t origdiv, uint64_t * remainder)
+{
+    int quotient = 1;
+
+    if (dividend == divisor)
+    {
+        *remainder = 0;
+        return 1;
+    }
+
+    else if (dividend < divisor)
+    {
+        *remainder = dividend;
+        return 0;
+    }
+
+    while (divisor <= dividend)
+    {
+        divisor = divisor << 1;
+        quotient = quotient << 1;
+    }
+
+    if (dividend < divisor)
+    {
+        divisor >>= 1;
+        quotient >>= 1;
+    }
+
+    quotient = quotient + division(dividend - divisor, origdiv, origdiv, remainder);
+
+    return quotient;
+}
+
+uint64_t division2(uint64_t dividend, uint64_t divisor, uint64_t * remainder) {
+
+    uint64_t origdiv = divisor;
+    uint64_t quotient;
+    uint64_t sum_q=0;
+    while(true) {
+        quotient = 1;
+
+        if (dividend == divisor) {
+            *remainder = 0;
+            sum_q += 1;
+            break;
+        } else if (dividend < divisor) {
+            *remainder = dividend;
+            break;
+        }
+
+        while (divisor <= dividend) {
+            divisor <<= 1;
+            quotient <<= 1;
+        }
+
+        if (dividend < divisor) {
+            divisor >>= 1;
+            quotient >>= 1;
+        }
+
+        sum_q += quotient;
+        dividend -= divisor;
+        divisor = origdiv;
+    }
+
+    return sum_q;
+}
+
 int main()
 {
     //cout << "inf int addition and comparison, only 64bit and positive: " << std::boolalpha << test() << endl;
     //cout << "inf int multiplication, only 64bit and positive: " << std::boolalpha << testMult() << endl;
     //cout << "inf int subtraction, only 64bit and positive: " << std::boolalpha << testMinus() << endl;
-    cout << "Easy Fixed test, only 64bit and positive: " << std::boolalpha << testFixed1() << endl;
+    //cout << "Easy Fixed test, only 64bit and positive: " << std::boolalpha << testFixed1() << endl;
+    //cout << "shift operators test : " << std::boolalpha << shiftOperatorsTest() << endl;
+    cout << "division algo test : " << std::boolalpha << divisionAlgoTest() << endl;
 
     return 0;
+}
+
+bool shiftOperatorsTest() {
+    srand(654654);
+    uintInf_t n;
+    uint64_t test;
+    uint64_t r;
+
+    for(uint64_t i = 0; i < 1000*1000; ++i) {
+
+        test = rand();
+        n = test;
+
+        r = rand()%31;
+        n <<= r;
+        test <<= r;
+        if(n.merge2() != test) {
+            cout << test << " " << n.merge2() << endl;
+            return false;
+        }
+
+        r = rand()%31;
+        n >>= r;
+        test >>= r;
+
+        if(n.merge2() != test) {
+            cout << test << " " << n.merge2() << endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+
+
+bool divisionAlgoTest() {
+    srand(64645);
+
+    uintInf_t n;
+    uintInf_t d;
+    uintInf_t rem;
+    uint64_t correct = 0;
+    uintInf_t res;
+    const uint64_t steps = 1000*10;
+
+    for(uint64_t i=0; i<steps; ++i) {
+        n = rand();
+        n = n * (2<<20);
+        d = rand();
+        d = d * (2<<20);
+        rem = 0;
+        //res = division(n,d,d,&rem);
+        res = n.division3(n,d,&rem);
+
+        if(res.merge2() != n.merge2()/d.merge2() && rem.merge2() != n.merge2()%d.merge2()) {
+            cout << "Error: wrong division" << n.merge2() << " / " << d.merge2() << " = " << (n.merge2()/d.merge2()) << " != ";
+            cout << res.merge2() << " | " << (n.merge2()%d.merge2()) << "!=" << rem.merge2() << endl;
+        }
+        else
+            correct++;
+    }
+
+    return steps == correct;
 }
 
 bool testFixed1() {

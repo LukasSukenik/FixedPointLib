@@ -14,7 +14,18 @@ class uintInf_t : public vector<uint64_t> {
 public:
     bool negative = false;          // negative == true -> number < 0
 
+    uintInf_t() = default;
+    uintInf_t(uint32_t n) {
+        if(n!=0)
+            this->push_back(n);
+    }
+
     bool operator== (const uintInf_t& o) {
+        if(this->empty() && o.empty())
+            return true;
+        if(this->empty() || o.empty())
+            return false;
+
         assert(o.back() !=0 && this->back() != 0);
         if(o.size() != this->size())
             return false;
@@ -32,6 +43,9 @@ public:
     }
 
     bool operator< (const uintInf_t& o) {
+        if(this->empty() && o.empty())
+            return false;
+
         assert(o.back() !=0 && this->back() != 0);
         if(o.size() > this->size())
             return true;
@@ -63,22 +77,72 @@ public:
         return !this->operator< (o);
     }
 
-    bool operator== (const unsigned int& o) {
-        assert(this->back() != 0);
-        return !this->operator !=(o);
-    }
-
-    bool operator!= (const unsigned int& o) {
-        assert(this->back() != 0);
-        if(this->empty() || this->size() > 1)
-            return true;
-        return o != this->operator [](0);
-    }
-
     //uintInf_t& operator= (uintInf_t o) inherited
 
     uintInf_t operator% (uintInf_t o) {
         return o;
+    }
+
+    uintInf_t operator <<= (const unsigned int shift) {
+        assert(shift <= 32);
+        for(auto& item : *this)
+            item <<= shift;
+        propagateUP();
+        return *this;
+    }
+
+    uintInf_t operator >>= (const unsigned int shift) {
+        assert(shift <= 32);
+        uint64_t t1 = 0;
+        uint64_t t2 = 0;
+
+        for(auto rIt = this->rbegin(); rIt != this->rend(); ++rIt) {
+            t1 = (*rIt << (64-shift)) >> 32;
+            *rIt >>= shift;
+            *rIt += t2;
+            t2 = t1;
+        }
+
+        while(this->back() == 0)
+            this->pop_back();
+        assert(this->back() != 0);
+        return *this;
+    }
+
+    uintInf_t division3(uintInf_t dividend, uintInf_t divisor, uintInf_t * remainder) {
+
+        uintInf_t origdiv = divisor;
+        uintInf_t quotient;
+        uintInf_t sum_q;
+        while(true) {
+            quotient = 1;
+
+            if (dividend == divisor) {
+                *remainder = 0;
+                sum_q = sum_q + 1;
+                break;
+            } else if (dividend < divisor) {
+                *remainder = dividend;
+                break;
+            }
+
+            while (divisor <= dividend) {
+                divisor <<= 1;
+                quotient <<= 1;
+            }
+
+            if (dividend < divisor) {
+                divisor >>= 1;
+                quotient >>= 1;
+            }
+
+            sum_q = sum_q + quotient;
+            dividend = dividend - divisor;
+            divisor = origdiv;
+        }
+
+        assert(sum_q.back() != 0);
+        return sum_q;
     }
 
     uintInf_t operator/ (uintInf_t o) { // TODO: Long division algorithm
@@ -89,6 +153,8 @@ public:
     }
 
     uintInf_t operator+ (uintInf_t o) {
+        if(this->empty() && o.empty())
+            return o;
         // some operations with (+) sign are infact (-)
         if(this->negative != o.negative) {
             if(!this->negative) {   // (+a) + (-b) -> (+a) - (+b)
@@ -193,8 +259,10 @@ public:
         return result[0];
     }
 
-    uint64_t merge2() {
-        uint64_t result = this->operator [](1);
+    uint64_t merge2() const {
+        if(this->empty())
+            return 0;
+        uint64_t result = (this->size() == 2) ? this->operator [](1) : 0;
         result <<= 32;
         return result + this->operator [](0);
     }
