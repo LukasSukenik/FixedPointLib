@@ -10,16 +10,6 @@
 
 using namespace std;
 
-unsigned int gcd (unsigned int n1, unsigned int n2) {
-    unsigned int tmp;
-    while (n2 != 0) {
-        tmp = n1;
-        n1 = n2;
-        n2 = tmp % n2;
-    }
-    return n1;
-}
-
 class uintInf_t : public vector<uint64_t> {
 public:
     bool negative = false;          // negative == true -> number < 0
@@ -73,7 +63,6 @@ public:
         return !this->operator< (o);
     }
 
-
     bool operator== (const unsigned int& o) {
         assert(this->back() != 0);
         return !this->operator !=(o);
@@ -93,6 +82,9 @@ public:
     }
 
     uintInf_t operator/ (uintInf_t o) { // TODO: Long division algorithm
+        assert(!o.empty() && "Division by zero");
+        if(o.size() == 1 && o.back()==1)
+            return *this;
         return o;
     }
 
@@ -201,6 +193,12 @@ public:
         return result[0];
     }
 
+    uint64_t merge2() {
+        uint64_t result = this->operator [](1);
+        result <<= 32;
+        return result + this->operator [](0);
+    }
+
 private:
     /**
      * @brief propagate set the vector elements so that first 32 bits are 0
@@ -217,20 +215,26 @@ private:
         if(temp != 0)
             this->push_back(temp);
     }
-
-    uint64_t merge(uint32_t i, uint32_t j) {
-        uint64_t result = i;
-        result <<= 32;
-        return result + j;
-    }
-
-
 };
 
 std::ostream& operator<<(std::ostream& o, const uintInf_t& u) {
     for(auto rIt = u.rbegin(); rIt != u.rend(); ++rIt)
         o << bitset<32>(*rIt);
     return o;
+}
+
+uintInf_t gcd (uintInf_t n1, uintInf_t n2) {
+    uintInf_t tmp;
+    n1.negative = false;
+    n2.negative = false;
+    /*while (n2 != 0) {
+        tmp = n1;
+        n1 = n2;
+        n2 = tmp % n2;
+    }
+    return n1;*/
+    tmp.push_back(1);
+    return tmp;
 }
 
 class Fixed {
@@ -250,42 +254,55 @@ public:
     }
 
     Fixed operator+ (Fixed o) {
-        // set apropriate denumarator (scale), multiply (TODO largest common multiple)
+        o.num = (this->num * o.scale) + (o.num * this->scale);
         o.scale = o.scale * this->scale;
-        // multiply the num according to new scale
-        o.num = o.num * this->scale;
-        this->num = this->num * o.scale;
-        // add nums
-        o.num = this->num + o.num;
+        o.minimizeFraction();
         return o;
     }
 
+    Fixed& operator+= (Fixed o) {
+        *this = this->operator +(o);
+        return *this;
+    }
+
     Fixed operator- (Fixed o) {
-        // set apropriate denumarator (scale)
+        o.num = (this->num * o.scale) - (o.num * this->scale);
         o.scale = o.scale * this->scale;
-        // multiply the num according to new scale
-        o.num = o.num * this->scale;
-        this->num = this->num * o.scale;
-        // subtract nums
-        o.num = this->num - o.num;
+        o.minimizeFraction();
         return o;
+    }
+
+    Fixed& operator-= (Fixed o) {
+        *this = this->operator -(o);
+        return *this;
     }
 
     Fixed operator* (Fixed o) {
         o.scale = o.scale * this->scale;
         o.num = o.num * this->num;
-        // TODO: Make the fraction so that it doesnt have common divisors
+        o.minimizeFraction();
         return o;
+    }
+
+    Fixed& operator*= (Fixed o) {
+        *this = this->operator *(o);
+        return *this;
     }
 
     Fixed operator/ (Fixed o) {
         o.scale = o.scale * this->num;
         o.num = o.num * this->scale;
-        // TODO: Make the fraction so that it doesnt have common divisors
+        o.minimizeFraction();
         return o;
     }
 
+    Fixed& operator/= (Fixed o) {
+        *this = this->operator /(o);
+        return *this;
+    }
+
     Fixed operator% (Fixed o) = delete; // works only for integers
+    Fixed& operator%= (Fixed o) = delete; // works only for integers
 
     Fixed operator++ (int) { // postfix
         Fixed tmp(*this);
@@ -311,32 +328,43 @@ public:
         return *this;
     }
 
-    bool operator== (const Fixed& o);
-    bool operator!= (const Fixed& o);
+    bool operator== (const Fixed& o) {
+        return ((this->num * o.scale) == (this->scale * o.num));
+    }
 
-    bool operator< (const Fixed& o);
-    bool operator> (const Fixed& o);
+    bool operator!= (const Fixed& o) {
+        return ((this->num * o.scale) != (this->scale * o.num));
+    }
 
-    bool operator<= (const Fixed& o);
-    bool operator>= (const Fixed& o);
+    bool operator< (const Fixed& o) {
+        return ((this->num * o.scale) < (this->scale * o.num));
+    }
 
-    Fixed& operator+= (Fixed o);
-    Fixed& operator-= (Fixed o);
+    bool operator> (const Fixed& o) {
+        return ((this->num * o.scale) > (this->scale * o.num));
+    }
 
-    Fixed& operator*= (Fixed o);
-    Fixed& operator/= (Fixed o);
+    bool operator<= (const Fixed& o) {
+        return ((this->num * o.scale) <= (this->scale * o.num));
+    }
 
-    Fixed& operator%= (Fixed o) = delete; // works only for integers
+    bool operator>= (const Fixed& o) {
+        return ((this->num * o.scale) >= (this->scale * o.num));
+    }
 
     std::ostream& operator<<(std::ostream& o);
     string toString();
+
+    string toString64bit() {
+        return std::to_string(this->num.merge2()) + " / " + std::to_string(this->scale.merge2());
+    }
 
     void setOBase(int obase) {
         if(obase >= 2 && obase <= 999)
             this->obase = obase;
     }
 
-private:
+//private:
     // https://en.wikipedia.org/wiki/Fixed-point_arithmetic
     //
     uintInf_t num;   // numerator, only last 32 bits are valid, rest 0
@@ -345,4 +373,10 @@ private:
     int valid;
     int ibase; // input base, 2 to 16
     int obase; // outputbase, 2 to 999
+
+    void minimizeFraction() {
+        uintInf_t gcdNum = gcd(this->num, this->scale);
+        this->scale = this->scale / gcdNum;
+        this->num = this->num / gcdNum;
+    }
 };
