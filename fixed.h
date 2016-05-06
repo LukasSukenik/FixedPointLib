@@ -28,6 +28,8 @@ public:
         assert(o.back() !=0 && this->back() != 0);
         if(o.size() != this->size())
             return false;
+        if(this->negative != o.negative) // 0 is reprezented by empty container
+            return false;
         for(unsigned int i=0; i<this->size(); ++i) {
             if(this->operator [](i) != o[i])
                 return false;
@@ -45,6 +47,10 @@ public:
             return true;
         if(o.size() < this->size())
             return false;
+        if(!this->negative && o.negative) // (+) < (-)
+            return false;
+        if(this->negative && !o.negative) // (-) < (+)
+            return true;
         for(int i=this->size()-1; i>=0; --i) {
             if(this->operator [](i) < o[i])
                 return true;
@@ -68,14 +74,14 @@ public:
     }
 
 
-    bool operator== (const int& o) {
+    bool operator== (const unsigned int& o) {
         assert(this->back() != 0);
         return !this->operator !=(o);
     }
 
-    bool operator!= (const int& o) {
+    bool operator!= (const unsigned int& o) {
         assert(this->back() != 0);
-        if(this->empty() || o < 0 || this->size() > 1)
+        if(this->empty() || this->size() > 1)
             return true;
         return o != this->operator [](0);
     }
@@ -104,7 +110,7 @@ public:
         uintInf_t result;
         result.resize(std::max(o.size(), this->size()));
 
-        for(auto item : result) {
+        for(auto& item : result) {
             item = 0;
         }
         for(unsigned int i=0; i<o.size(); i++) {
@@ -187,7 +193,7 @@ public:
         for(auto& item : result) {
             item.propagateUP();
         }
-        for(int i=1; i<std::max(o.size(), this->size()); i++) {
+        for(unsigned int i=1; i<std::max(o.size(), this->size()); i++) {
             result[0] = result[0] + result[i];
         }
         result[0].negative = (this->negative == o.negative) ? false : true;
