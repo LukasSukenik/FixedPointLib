@@ -10,6 +10,8 @@
 
 using namespace std;
 
+const string DIGITS = "0123456789ABCDEF";
+
 class uintInf_t : public vector<uint64_t> {
 public:
     bool negative = false;          // negative == true -> number < 0
@@ -46,7 +48,7 @@ public:
         if(this->empty() && o.empty())
             return false;
 
-        assert(o.back() !=0 && this->back() != 0);
+        //assert(o.back() !=0 && this->back() != 0);
         if(o.size() > this->size())
             return true;
         if(o.size() < this->size())
@@ -232,7 +234,8 @@ public:
     }
 
     uintInf_t operator* (uintInf_t o)  {
-        uintInf_t result[ std::max(o.size(), this->size()) ];
+	    std::vector<uintInf_t> result;
+	    result.resize(std::max(o.size(), this->size()));
         for(auto& item : result) {
             item.resize( o.size() * this->size() );
         }
@@ -257,7 +260,7 @@ public:
             result[0] = result[0] + result[i];
         }
         result[0].negative = (this->negative == o.negative) ? false : true;
-        assert(result[0].back() != 0);
+        //assert(result[0].back() != 0);                               //TODO SIGSEGV
         return result[0];
     }
 
@@ -307,8 +310,35 @@ uintInf_t gcd (uintInf_t n1, uintInf_t n2) {
 
 class Fixed {
 public:
-    Fixed(int valid, int ibase, int obase, string num) : valid(valid), ibase(ibase), obase(obase) {
-        // convert num to internal type based on ibase
+	Fixed() : num(0), scale(1), valid(0), ibase(10), obase(10), precision(0) {}
+
+    Fixed(string num, int valid, uint32_t ibase = 10, uint32_t obase = 10, uint32_t precision = 20) :
+	    valid(valid), ibase(ibase), obase(obase), precision(precision) {
+	    assert(2 <= ibase && ibase <= 16);
+	    assert(2 <= obase && obase <= 999);
+
+	    bool negative = false;
+	    if (num[0] == '-') {
+		    num = num.substr(1);
+		    negative = true;
+	    }
+
+	    auto slash = num.find_first_of('/');
+	    if (slash != string::npos) {
+		    Fixed f1(num.substr(0, slash), this->valid, this->ibase, this->obase);
+		    Fixed f2(num.substr(slash+1), this->valid, this->ibase, this->obase);
+		    this->num = f1.num * f2.scale;
+		    this->scale = f1.scale * f2.num ;
+	    }
+	    else if (num.empty()) {
+		    this->num = 0;
+		    this->scale = 1;
+	    }
+	    else {
+		    convertInput(num);
+	    }
+	    minimizeFraction();
+	    this->num.negative = negative;
     }
 
     Fixed& operator= (Fixed o) {
@@ -358,10 +388,11 @@ public:
     }
 
     Fixed operator/ (Fixed o) {
-        o.scale = o.scale * this->num;
-        o.num = o.num * this->scale;
-        o.minimizeFraction();
-        return o;
+        Fixed res;
+	    res.num = this->num * o.scale;
+	    res.scale = this->scale * o.num;
+        res.minimizeFraction();  //TODO 1/20 returns "empty"/20, gcd=1, maybe some problem with 1/gcd?
+        return res;
     }
 
     Fixed& operator/= (Fixed o) {
@@ -420,17 +451,39 @@ public:
         return ((this->num * o.scale) >= (this->scale * o.num));
     }
 
-    std::ostream& operator<<(std::ostream& o);
-    string toString();
+    friend std::ostream& operator<<(std::ostream& o, Fixed & num) {
+	    o << num.toString();
+	    return o;
+    }
+
+    string toString() {
+	    auto numerator = this->num;
+	    numerator.negative = false;
+
+	    std::string intPart = integerToString(numerator / this->scale);
+
+	    if (this->scale == 1) {
+		    return (intPart.empty() || intPart == "-") ? "0" : intPart;
+	    }
+
+	    std::string fractPart = fractionToString(numerator % this->scale);
+
+	    //check if floating part contains only 0
+	    return (fractPart.find_first_not_of("0") != string::npos) ? intPart + "." + fractPart : "0";
+    }
 
     string toString64bit() {
         return std::to_string(this->num.merge2()) + " / " + std::to_string(this->scale.merge2());
     }
 
-    void setOBase(int obase) {
+    void setOBase(uint32_t obase) {
         if(obase >= 2 && obase <= 999)
             this->obase = obase;
     }
+
+	void setPrecision(uint32_t precision) {
+		this->precision = precision;
+	}
 
 //private:
     // https://en.wikipedia.org/wiki/Fixed-point_arithmetic
@@ -439,12 +492,96 @@ public:
     uintInf_t scale; // denominator
 
     int valid;
-    int ibase; // input base, 2 to 16
-    int obase; // outputbase, 2 to 999
+    uint32_t ibase; // input base, 2 to 16
+	uint32_t obase; // outputbase, 2 to 999
+	uint32_t precision;
 
     void minimizeFraction() {
         uintInf_t gcdNum = gcd(this->num, this->scale);
         this->scale = this->scale / gcdNum;
         this->num = this->num / gcdNum;
     }
+
+	std::string leadingZeros(unsigned long cipher) {
+		return string(digitsCount(this->obase) - digitsCount(cipher), '0') + std::to_string(cipher);
+	}
+
+	unsigned long digitsCount(unsigned long number) {
+		unsigned long length = 1;
+		while ( number /= 10 ) {
+			length++;
+		}
+		return length;
+	}
+
+	void convertInput(string &num) {
+		//get integral and real part of the number
+		auto point = num.find_first_of('.');
+		string intStr = num.substr(0, point);
+		string fracStr = (point != string::npos) ? num.substr(point+1) : "";
+
+		//convert integral part to decimal number
+		uintInf_t intPart(0);
+		uintInf_t power(1);
+		for (unsigned long i = 0; i < intStr.length(); ++i) {
+			auto digit = DIGITS.find(intStr[intStr.length()-i-1]);
+			intPart = intPart + power * uintInf_t(digit);
+			power = power * uintInf_t(this->ibase);
+		}
+		this->num = intPart;
+		this->scale = 1;
+
+		if (fracStr.empty()) {
+			return;
+		}
+
+		//convert fractional part to decimal number
+		Fixed tmp("0",this->valid,this->ibase,this->obase);
+		for (unsigned long i = 0; i < fracStr.length(); ++i) {
+			auto digit = DIGITS.find(fracStr[i]);
+			tmp.num = digit;
+			tmp.scale = tmp.scale * uintInf_t(this->ibase);
+			*this += tmp;
+		}
+	}
+
+	std::string integerToString(uintInf_t integer) {
+		string integral;
+		while (integer > 0) {
+			auto remainder = (integer % uintInf_t(this->obase));
+			auto cipher = (remainder.size() != 0) ? remainder.back() : 0; //TODO
+
+			if (this->obase <= 16) {
+				integral = DIGITS[cipher] + integral;
+			}
+			else {
+				integral = " " + leadingZeros(cipher) + integral;
+			}
+
+			integer = integer / uintInf_t(this->obase);
+		}
+
+		return ((this->num.negative) ? "-" : "") + integral;
+	}
+
+	std::string fractionToString(uintInf_t fraction) {
+		string fractPart;
+		uint32_t i = 0;
+		while (fraction != 0 && i != this->precision) {
+			fraction = fraction * uintInf_t(this->obase);
+			uintInf_t division = fraction / this->scale;
+			auto cipher = (division.size() != 0) ? division.back() : 0;
+			fraction = fraction % this->scale;
+
+			if (this->obase <= 16) {
+				fractPart += DIGITS[cipher];
+			}
+			else {
+				fractPart += leadingZeros(cipher) + " ";
+			}
+
+			i++;
+		}
+		return fractPart;
+	}
 };

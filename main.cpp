@@ -94,12 +94,41 @@ uint64_t division2(uint64_t dividend, uint64_t divisor, uint64_t * remainder) {
 
 int main()
 {
-    cout << "inf int addition and comparison, only 64bit and positive: " << std::boolalpha << test() << endl;
+	Fixed a("101111000110000101001110",1,2,10); // 12345678
+	cout << a << endl;
+
+	Fixed b("0.375",1,10,5); //0.14141414...
+	b.setPrecision(0);
+	cout << b << endl;
+
+	Fixed c("1010101.10111001",1,2,20); // 04 05.14 09 01 05
+	cout << c << endl;
+
+	Fixed d("-A5.2D90",1,16,10); //-165.177978515625
+	d++;
+	cout << d << endl; //-164.177978515625
+
+	Fixed e("-1/20",1); //-0.05
+	e.setPrecision(1);
+	cout << e << endl; //0
+
+	Fixed f("1.1/0.1100011",1,2); //cca 1.92307692308
+	f--;
+	cout << f << endl; //cca 0.92307692308
+
+	Fixed g("-1",1);
+	Fixed h("20",1);
+	Fixed tmp = g/h; //-0.05
+	tmp.setPrecision(2);
+	cout << g << "/" << h << "=" << tmp << endl;
+
+
+    /*cout << "inf int addition and comparison, only 64bit and positive: " << std::boolalpha << test() << endl;
     cout << "inf int multiplication, only 64bit and positive: " << std::boolalpha << testMult() << endl;
     cout << "inf int subtraction, only 64bit and positive: " << std::boolalpha << testMinus() << endl;
     cout << "Easy Fixed test, only 64bit and positive: " << std::boolalpha << testFixed1() << endl;
     cout << "shift operators test : " << std::boolalpha << shiftOperatorsTest() << endl;
-    cout << "division algo test : " << std::boolalpha << divisionAlgoTest() << endl;
+    cout << "division algo test : " << std::boolalpha << divisionAlgoTest() << endl;*/
 
     return 0;
 }
@@ -168,15 +197,15 @@ bool divisionAlgoTest() {
 }
 
 bool testFixed1() {
-    Fixed num(1,1,1,"1/4");
-    num.num.push_back(1);
-    num.scale.push_back(4);
+    Fixed num("1/4",1);
+    //num.num.push_back(1);
+    //num.scale.push_back(4);
 
-    Fixed num2(1,1,1,"1/4");
-    num2.num.push_back(1);
-    num2.scale.push_back(20);
+    Fixed num2("1/20",1);
+    //num2.num.push_back(1);
+    //num2.scale.push_back(20);
 
-    Fixed num3(1,1,1,"1/4");
+    Fixed num3("0",1);
     num3 = num + num2;
 
     cout << num.toString64bit() + " + " + num2.toString64bit() + " = " + (num3).toString64bit() << endl;
