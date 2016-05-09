@@ -310,10 +310,10 @@ uintInf_t gcd (uintInf_t n1, uintInf_t n2) {
 
 class Fixed {
 public:
-	Fixed() : num(0), scale(1), valid(0), ibase(10), obase(10), precision(0) {}
+	Fixed() : num(0), scale(1), ibase(10), obase(10), precision(20) {}
 
-    Fixed(string num, int valid, uint32_t ibase = 10, uint32_t obase = 10, uint32_t precision = 20) :
-	    valid(valid), ibase(ibase), obase(obase), precision(precision) {
+    Fixed(string num, uint32_t ibase = 10, uint32_t obase = 10, uint32_t precision = 20) :
+	    ibase(ibase), obase(obase), precision(precision) {
 	    assert(2 <= ibase && ibase <= 16);
 	    assert(2 <= obase && obase <= 999);
 
@@ -325,8 +325,8 @@ public:
 
 	    auto slash = num.find_first_of('/');
 	    if (slash != string::npos) {
-		    Fixed f1(num.substr(0, slash), this->valid, this->ibase, this->obase);
-		    Fixed f2(num.substr(slash+1), this->valid, this->ibase, this->obase);
+		    Fixed f1(num.substr(0, slash), this->ibase, this->obase, this->precision);
+		    Fixed f2(num.substr(slash+1), this->ibase, this->obase, this->precision);
 		    this->num = f1.num * f2.scale;
 		    this->scale = f1.scale * f2.num ;
 	    }
@@ -344,7 +344,7 @@ public:
     Fixed& operator= (Fixed o) {
         swap(this->num,   o.num);
         swap(this->scale, o.scale);
-        swap(this->valid, o.valid);
+        swap(this->precision, o.precision);
         swap(this->ibase, o.ibase);
         swap(this->obase, o.obase);
 
@@ -462,14 +462,11 @@ public:
 
 	    std::string intPart = integerToString(numerator / this->scale);
 
-	    if (this->scale == 1) {
-		    return (intPart.empty() || intPart == "-") ? "0" : intPart;
-	    }
-
 	    std::string fractPart = fractionToString(numerator % this->scale);
 
 	    //check if floating part contains only 0
-	    return (fractPart.find_first_not_of("0") != string::npos) ? intPart + "." + fractPart : "0";
+	    return (fractPart.find_first_not_of("0") != string::npos) ? intPart + "." + fractPart :
+	           (intPart.empty() || intPart == "-") ? "0" : intPart;
     }
 
     string toString64bit() {
@@ -491,7 +488,6 @@ public:
     uintInf_t num;   // numerator, only last 32 bits are valid, rest 0
     uintInf_t scale; // denominator
 
-    int valid;
     uint32_t ibase; // input base, 2 to 16
 	uint32_t obase; // outputbase, 2 to 999
 	uint32_t precision;
@@ -536,7 +532,7 @@ public:
 		}
 
 		//convert fractional part to decimal number
-		Fixed tmp("0",this->valid,this->ibase,this->obase);
+		Fixed tmp("0", this->ibase, this->obase, this->precision);
 		for (unsigned long i = 0; i < fracStr.length(); ++i) {
 			auto digit = DIGITS.find(fracStr[i]);
 			tmp.num = digit;
