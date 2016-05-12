@@ -41,8 +41,8 @@ int main()
 	cout << d << endl; //-164.177978515625
 
 	Fixed e("-1/20"); //-0.05
-	e.setPrecision(1);
-	cout << e << endl; //0
+    e.setPrecision(1);
+    cout << "should be -0.05 is " <<  e << endl; //0
 
 	Fixed f("1.1/0.1100011",2); //cca 1.92307692308
 	f--;
@@ -55,12 +55,12 @@ int main()
 	cout << g << "/" << h << "=" << tmp << endl;
 
 
-    /*cout << "inf int addition and comparison, only 64bit and positive: " << std::boolalpha << test() << endl;
+    cout << "inf int addition and comparison, only 64bit and positive: " << std::boolalpha << test() << endl;
     cout << "inf int multiplication, only 64bit and positive: " << std::boolalpha << testMult() << endl;
     cout << "inf int subtraction, only 64bit and positive: " << std::boolalpha << testMinus() << endl;
     cout << "Easy Fixed test, only 64bit and positive: " << std::boolalpha << testFixed1() << endl;
     cout << "shift operators test : " << std::boolalpha << shiftOperatorsTest() << endl;
-    cout << "division algo test : " << std::boolalpha << divisionAlgoTest() << endl;*/
+    cout << "division algo test : " << std::boolalpha << divisionAlgoTest() << endl;
 
     return 0;
 }

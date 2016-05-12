@@ -376,27 +376,26 @@ public:
     }
 
     Fixed operator* (Fixed o) {
-        o.scale = o.scale * this->scale;
-        o.num = o.num * this->num;
-        o.minimizeFraction();
-        return o;
+        Fixed res(*this);
+        return res*=o;
     }
 
     Fixed& operator*= (Fixed o) {
-        *this = this->operator *(o);
+        this->scale = o.scale * this->scale;
+        this->num = o.num * this->num;
+        this->minimizeFraction();
         return *this;
     }
 
     Fixed operator/ (Fixed o) {
-        Fixed res;
-	    res.num = this->num * o.scale;
-	    res.scale = this->scale * o.num;
-        res.minimizeFraction();  //TODO 1/20 returns "empty"/20, gcd=1, maybe some problem with 1/gcd?
-        return res;
+        Fixed res(*this);
+        return res/=o;
     }
 
     Fixed& operator/= (Fixed o) {
-        *this = this->operator /(o);
+        this->num = this->num * o.scale;
+        this->scale = this->scale * o.num;
+        this->minimizeFraction();  //TODO 1/20 returns "empty"/20, gcd=1, maybe some problem with 1/gcd?
         return *this;
     }
 
