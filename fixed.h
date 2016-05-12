@@ -351,27 +351,27 @@ public:
         return *this;
     }
 
-    Fixed operator+ (Fixed o) {
-        o.num = (this->num * o.scale) + (o.num * this->scale);
-        o.scale = o.scale * this->scale;
-        o.minimizeFraction();
-        return o;
-    }
-
     Fixed& operator+= (Fixed o) {
-        *this = this->operator +(o);
+        this->num = (this->num * o.scale) + (o.num * this->scale);
+        this->scale = o.scale * this->scale;
+        this->minimizeFraction();
         return *this;
     }
 
+    Fixed operator+ (Fixed o) {
+        Fixed res(*this);
+        return res+=o;
+    }
+
     Fixed operator- (Fixed o) {
-        o.num = (this->num * o.scale) - (o.num * this->scale);
-        o.scale = o.scale * this->scale;
-        o.minimizeFraction();
-        return o;
+        Fixed res(*this);
+        return res-=o;
     }
 
     Fixed& operator-= (Fixed o) {
-        *this = this->operator -(o);
+        this->num = (this->num * o.scale) - (o.num * this->scale);
+        this->scale = o.scale * this->scale;
+        this->minimizeFraction();
         return *this;
     }
 
