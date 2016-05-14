@@ -12,17 +12,19 @@ using namespace std;
 
 const string DIGITS = "0123456789ABCDEF";
 
-class uintInf_t : public vector<uint64_t> {
+class intInf_t: public vector<uint64_t> {
 public:
     bool negative = false;          // negative == true -> number < 0
 
-    uintInf_t() = default;
-    uintInf_t(uint32_t n) {
+    intInf_t() = default;
+    intInf_t(int32_t n) {
         if(n!=0)
             this->push_back(n);
+        if(n < 0)
+            negative = true;
     }
 
-    bool operator== (const uintInf_t& o) {
+    bool operator== (const intInf_t& o) {
         if(this->empty() && o.empty())
             return true;
         if(this->empty() || o.empty())
@@ -40,11 +42,11 @@ public:
         return true;
     }
 
-    bool operator!= (const uintInf_t& o) {
+    bool operator!= (const intInf_t& o) {
         return !this->operator ==(o);
     }
 
-    bool operator< (const uintInf_t& o) {
+    bool operator< (const intInf_t& o) {
         if(this->empty() && o.empty())
             return false;
 
@@ -67,27 +69,27 @@ public:
         return false; // they are equal
     }
 
-    bool operator> (const uintInf_t& o) {
+    bool operator> (const intInf_t& o) {
         return !this->operator< (o) && !this->operator ==(o);
     }
 
-    bool operator<= (const uintInf_t& o) {
+    bool operator<= (const intInf_t& o) {
         return this->operator< (o) || this->operator ==(o);
     }
 
-    bool operator>= (const uintInf_t& o) {
+    bool operator>= (const intInf_t& o) {
         return !this->operator< (o);
     }
 
     //uintInf_t& operator= (uintInf_t o) inherited
 
-    uintInf_t operator% (uintInf_t o) {
-        uintInf_t rem;
+    intInf_t operator% (intInf_t o) {
+        intInf_t rem;
         division3(*this,o, &rem);
         return rem;
     }
 
-    uintInf_t operator <<= (const unsigned int shift) {
+    intInf_t operator <<= (const unsigned int shift) {
         assert(shift <= 32);
         for(auto& item : *this)
             item <<= shift;
@@ -95,7 +97,20 @@ public:
         return *this;
     }
 
-    uintInf_t operator >>= (const unsigned int shift) {
+    intInf_t operator >> (const unsigned int shift) {
+        intInf_t o;
+        o >>= shift;
+        return o;
+    }
+
+
+    intInf_t operator << (const unsigned int shift) {
+        intInf_t o;
+        o <<= shift;
+        return o;
+    }
+
+    intInf_t operator >>= (const unsigned int shift) {
         assert(shift <= 32);
         uint64_t t1 = 0;
         uint64_t t2 = 0;
@@ -113,11 +128,14 @@ public:
         return *this;
     }
 
-    uintInf_t division3(uintInf_t dividend, uintInf_t divisor, uintInf_t * remainder) {
+    intInf_t division3(intInf_t dividend, intInf_t divisor, intInf_t * remainder) {
 
-        uintInf_t origdiv = divisor;
-        uintInf_t quotient;
-        uintInf_t sum_q;
+        bool res = (dividend.negative || divisor.negative) && !(dividend.negative && divisor.negative);
+        dividend.negative = false;
+        divisor.negative = false;
+        intInf_t origdiv = divisor;
+        intInf_t quotient;
+        intInf_t sum_q;
         while(true) {
             quotient = 1;
 
@@ -147,16 +165,17 @@ public:
 
 
         assert(sum_q.empty() || sum_q.back() != 0);
+        sum_q.negative = res;
         return sum_q;
     }
 
-    uintInf_t operator/ (uintInf_t o) { // TODO: Long division algorithm
+    intInf_t operator/ (intInf_t o) { // TODO: Long division algorithm
         assert(!o.empty() && "Division by zero");
-        uintInf_t rem;
+        intInf_t rem;
         return division3(*this, o, &rem);
     }
 
-    uintInf_t operator+ (uintInf_t o) {
+    intInf_t operator+ (intInf_t o) {
         if(this->empty() && o.empty())
             return o;
         // some operations with (+) sign are infact (-)
@@ -169,7 +188,7 @@ public:
                 return o.operator -(*this);
             }
         }
-        uintInf_t result;
+        intInf_t result;
         result.resize(std::max(o.size(), this->size()));
 
         for(auto& item : result) {
@@ -184,12 +203,14 @@ public:
         result.propagateUP();
         result.negative = this->negative;
 
-        assert(result.back() != 0);
+        while(result.back() == 0) // due to intermediate results of operator *, which have 0 on higher indexes
+            result.pop_back();
+        assert(result.empty() || result.back() != 0);
 
         return result;
     }
 
-    uintInf_t operator- (uintInf_t o) {
+    intInf_t operator- (intInf_t o) {
         // some operations with (-) sign are infact (+)
         if(this->negative != o.negative) {
             o.negative = this->negative;
@@ -197,22 +218,23 @@ public:
         }
 
         // Problem: We have unsigned integers -> cant go below 0
-        uintInf_t *big, *small;
-        uintInf_t result; // is big - small
+        intInf_t *big, *small;
+        intInf_t result; // is big - small
         uint64_t temp = 0;
 
         if(this->operator >=(o)) {
             big = this;
             small = &o;
+            result = *big;
             result.negative = this->negative;
         } else {
             big = &o;
             small = this;
+            result = *big;
             result.negative = !this->negative;
         }
 
         assert(big->size() >= small->size());
-        result = *big;
 
         for(auto& item : result)
             item += (1ull<<32);
@@ -230,11 +252,16 @@ public:
         while(result.back() == 0)
             result.pop_back();
 
+        assert(result.empty() || result.back() != 0);
+
         return result;
     }
 
-    uintInf_t operator* (uintInf_t o)  {
-	    std::vector<uintInf_t> result;
+    intInf_t operator* (intInf_t o)  {
+        if(this->empty() || o.empty())
+            return intInf_t();
+
+        std::vector<intInf_t> result;
 	    result.resize(std::max(o.size(), this->size()));
         for(auto& item : result) {
             item.resize( o.size() * this->size() );
@@ -260,7 +287,12 @@ public:
             result[0] = result[0] + result[i];
         }
         result[0].negative = (this->negative == o.negative) ? false : true;
-        //assert(result[0].back() != 0);                               //TODO SIGSEGV
+
+
+        while(result[0].back() == 0)
+            result[0].pop_back();
+        assert(result[0].empty() || result[0].back() != 0);  //TODO SIGSEGV
+
         return result[0];
     }
 
@@ -270,6 +302,14 @@ public:
         uint64_t result = (this->size() == 2) ? this->operator [](1) : 0;
         result <<= 32;
         return result + this->operator [](0);
+    }
+
+    int64_t mergeSigned() {
+        if(this->empty())
+            return 0;
+        int64_t result = (this->size() == 2) ? this->operator [](1) : 0;
+        result <<= 32;
+        return ( result + this->operator [](0) ) * (negative ? -1 : 1);
     }
 
 private:
@@ -290,14 +330,14 @@ private:
     }
 };
 
-std::ostream& operator<<(std::ostream& o, const uintInf_t& u) {
+std::ostream& operator<<(std::ostream& o, const intInf_t& u) {
     for(auto rIt = u.rbegin(); rIt != u.rend(); ++rIt)
         o << bitset<32>(*rIt);
     return o;
 }
 
-uintInf_t gcd (uintInf_t n1, uintInf_t n2) {
-    uintInf_t tmp;
+intInf_t gcd (intInf_t n1, intInf_t n2) {
+    intInf_t tmp;
     n1.negative = false;
     n2.negative = false;
     while (n2 != 0) {
@@ -323,12 +363,12 @@ public:
 		    negative = true;
 	    }
 
-	    auto slash = num.find_first_of('/');
-	    if (slash != string::npos) {
-		    Fixed f1(num.substr(0, slash), this->ibase, this->obase, this->precision);
+        auto slash = num.find_first_of('/');
+        if (slash != string::npos) {
+            Fixed f1(num.substr(0, slash), this->ibase, this->obase, this->precision);
 		    Fixed f2(num.substr(slash+1), this->ibase, this->obase, this->precision);
 		    this->num = f1.num * f2.scale;
-		    this->scale = f1.scale * f2.num ;
+            this->scale = f1.scale * f2.num ;
 	    }
 	    else if (num.empty()) {
 		    this->num = 0;
@@ -337,8 +377,8 @@ public:
 	    else {
 		    convertInput(num);
 	    }
-	    minimizeFraction();
-	    this->num.negative = negative;
+        minimizeFraction();
+        this->num.negative = negative;
     }
 
     Fixed& operator= (Fixed o) {
@@ -414,13 +454,13 @@ public:
     }
 
     Fixed& operator++ () { // prefix
-        uintInf_t inc = this->scale;
+        intInf_t inc = this->scale;
         inc.negative = false;
         this->num = this->num + inc;
         return *this;
     }
     Fixed& operator-- () {
-        uintInf_t inc = this->scale;
+        intInf_t inc = this->scale;
         inc.negative = true;
         this->num = this->num + inc;
         return *this;
@@ -484,15 +524,15 @@ public:
 //private:
     // https://en.wikipedia.org/wiki/Fixed-point_arithmetic
     //
-    uintInf_t num;   // numerator, only last 32 bits are valid, rest 0
-    uintInf_t scale; // denominator
+    intInf_t num;   // numerator, only last 32 bits are valid, rest 0
+    intInf_t scale; // denominator
 
     uint32_t ibase; // input base, 2 to 16
 	uint32_t obase; // outputbase, 2 to 999
 	uint32_t precision;
 
     void minimizeFraction() {
-        uintInf_t gcdNum = gcd(this->num, this->scale);
+        intInf_t gcdNum = gcd(this->num, this->scale);
         this->scale = this->scale / gcdNum;
         this->num = this->num / gcdNum;
     }
@@ -516,12 +556,12 @@ public:
 		string fracStr = (point != string::npos) ? num.substr(point+1) : "";
 
 		//convert integral part to decimal number
-		uintInf_t intPart(0);
-		uintInf_t power(1);
+        intInf_t intPart(0);
+        intInf_t power(1);
 		for (unsigned long i = 0; i < intStr.length(); ++i) {
 			auto digit = DIGITS.find(intStr[intStr.length()-i-1]);
-			intPart = intPart + power * uintInf_t(digit);
-			power = power * uintInf_t(this->ibase);
+            intPart = intPart + power * intInf_t(digit);
+            power = power * intInf_t(this->ibase);
 		}
 		this->num = intPart;
 		this->scale = 1;
@@ -535,15 +575,15 @@ public:
 		for (unsigned long i = 0; i < fracStr.length(); ++i) {
 			auto digit = DIGITS.find(fracStr[i]);
 			tmp.num = digit;
-			tmp.scale = tmp.scale * uintInf_t(this->ibase);
+            tmp.scale = tmp.scale * intInf_t(this->ibase);
 			*this += tmp;
 		}
 	}
 
-	std::string integerToString(uintInf_t integer) {
+    std::string integerToString(intInf_t integer) {
 		string integral;
 		while (integer > 0) {
-			auto remainder = (integer % uintInf_t(this->obase));
+            auto remainder = (integer % intInf_t(this->obase));
 			auto cipher = (remainder.size() != 0) ? remainder.back() : 0; //TODO
 
 			if (this->obase <= 16) {
@@ -553,18 +593,18 @@ public:
 				integral = " " + leadingZeros(cipher) + integral;
 			}
 
-			integer = integer / uintInf_t(this->obase);
+            integer = integer / intInf_t(this->obase);
 		}
 
 		return ((this->num.negative) ? "-" : "") + integral;
 	}
 
-	std::string fractionToString(uintInf_t fraction) {
+    std::string fractionToString(intInf_t fraction) {
 		string fractPart;
 		uint32_t i = 0;
 		while (fraction != 0 && i != this->precision) {
-			fraction = fraction * uintInf_t(this->obase);
-			uintInf_t division = fraction / this->scale;
+            fraction = fraction * intInf_t(this->obase);
+            intInf_t division = fraction / this->scale;
 			auto cipher = (division.size() != 0) ? division.back() : 0;
 			fraction = fraction % this->scale;
 
