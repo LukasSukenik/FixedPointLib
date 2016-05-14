@@ -63,7 +63,7 @@ public:
 
 		while(true) {
 			try {
-				std::cout << ">> ";
+                //std::cout << ">> ";
 				std::getline(cin, line);
 
 				if (line.empty()) {
@@ -93,7 +93,7 @@ public:
 					if (parseAndEvaluate(line, result)) {
 						result.setOBase(this->obase);
 						result.setPrecision(this->precision);
-						std::cout << ">> " << result << std::endl;
+                        std::cout /*<< ">> "*/ << result << std::endl;
 					}
 				}
 			}
