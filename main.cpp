@@ -78,7 +78,7 @@ int main()
 }
 
 bool testInfIntComplex64() {
-    intInf_t t1, t2, t3;
+    intInf t1, t2, t3;
     int64_t x,y,z;
 
     srand(0);
@@ -143,7 +143,7 @@ bool testInfIntComplex64() {
 }
 
 bool testInfIntComplex() {
-    intInf_t t1, t2, t3;
+    intInf t1, t2, t3;
 
     srand(0);
 
@@ -182,7 +182,7 @@ bool testInfIntComplex() {
 
 bool shiftOperatorsTest() {
     srand(654654);
-    intInf_t n;
+    intInf n;
     uint64_t test;
     uint64_t r;
 
@@ -216,11 +216,11 @@ bool shiftOperatorsTest() {
 bool divisionAlgoTest() {
     srand(64645);
 
-    intInf_t n;
-    intInf_t d;
-    intInf_t rem;
+    intInf n;
+    intInf d;
+    intInf rem;
     uint64_t correct = 0;
-    intInf_t res;
+    intInf res;
     const uint64_t steps = 1000*10;
 
     for(uint64_t i=0; i<steps; ++i) {
@@ -263,7 +263,7 @@ bool testFixed1() {
 
 bool testMinus() {
     srand(0);
-    intInf_t t1,t2;
+    intInf t1,t2;
     uint64_t x,y,res;
 
     for(int i=0; i<1000*1000; i++) {
@@ -302,7 +302,7 @@ bool testMinus() {
 }
 
 bool test() {
-    intInf_t t1, t2;
+    intInf t1, t2;
     uint64_t x,y;
 
     srand(0);
@@ -346,7 +346,7 @@ bool test() {
 }
 
 bool testMult() {
-    intInf_t t1, t2;
+    intInf t1, t2;
     int64_t x,y;
 
     srand(0);
