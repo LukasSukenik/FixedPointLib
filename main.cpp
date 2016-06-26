@@ -34,7 +34,47 @@ int64_t merge2(uint32_t i, uint32_t j, bool negative) {
 }
 
 int main()
-{
+{   
+
+    //cout << "shift operators test : " << std::boolalpha << shiftOperatorsTest() << endl;
+
+    /*cout << Fixed("1957747793") * Fixed("1714636915") / Fixed("1681692777") / Fixed("846930886") / Fixed("1804289383") << endl;
+    cout << Fixed("1189641421") * Fixed("596516649") / Fixed("1649760492") / Fixed("719885386") / Fixed("424238335") << endl;
+    cout << Fixed("2044897763") * Fixed("1102520059") / Fixed("783368690") / Fixed("1350490027") / Fixed("1025202362") << endl;
+    cout << Fixed("1303455736") * Fixed("304089172") / Fixed("1540383426") / Fixed("1365180540") / Fixed("1967513926") << endl;
+    cout << Fixed("336465782") * Fixed("1726956429") / Fixed("294702567") / Fixed("521595368") / Fixed("35005211") << endl;
+    cout << Fixed("468703135") * Fixed("2145174067") / Fixed("233665123") / Fixed("278722862") / Fixed("861021530") << endl;
+
+    cout << Fixed("1957747793") * Fixed("1714636915") * Fixed("1681692777") * Fixed("846930886") / Fixed("1804289383") << endl;
+    cout << Fixed("1189641421") * Fixed("596516649") * Fixed("1649760492") * Fixed("719885386") / Fixed("424238335") << endl;
+    cout << Fixed("2044897763") * Fixed("1102520059") * Fixed("783368690") * Fixed("1350490027") / Fixed("1025202362") << endl;
+    cout << Fixed("1303455736") * Fixed("304089172") * Fixed("1540383426") * Fixed("1365180540") / Fixed("1967513926") << endl;
+    cout << Fixed("336465782") * Fixed("1726956429") * Fixed("294702567") * Fixed("521595368") / Fixed("35005211") << endl;
+    cout << Fixed("468703135") * Fixed("2145174067") * Fixed("233665123") * Fixed("278722862") / Fixed("861021530") << endl;
+    cout << Fixed("1369133069") * Fixed("635723058") * Fixed("1315634022") * Fixed("1801979802") / Fixed("1101513929") << endl;*/
+
+
+
+    Fixed aaa("-100000000000000000000000");
+    Fixed bbb("1");
+    if(aaa > bbb)
+        cout << "-100000000000000000000000 > 1 : " << "TRUE" << endl;
+    else cout << "-100000000000000000000000 > 1 : " << "FALSE" << endl;
+
+    cout << "division algo test : " << std::boolalpha << divisionAlgoTest() << endl;
+    cout << "Easy Fixed test, only 64bit and positive: " << std::boolalpha << testFixed1() << endl;
+    cout << "shift operators test : " << std::boolalpha << shiftOperatorsTest() << endl;
+    cout << "inf int addition and comparison, only 64bit and positive: " << std::boolalpha << test() << endl;
+cout << "division algo test : " << std::boolalpha << divisionAlgoTest() << endl;
+    cout << "inf int subtraction, only 64bit and positive: " << std::boolalpha << testMinus() << endl;
+    cout << "inf int multiplication, only 64bit: " << std::boolalpha << testMult() << endl;
+    cout << "complex +- 64bit infinite integer test : " << std::boolalpha << testInfIntComplex64() << endl;
+    cout << "complex infinite integer test : " << std::boolalpha << testInfIntComplex() << endl;
+
+
+    //-100000000000000000000000 > 1`
+
+
     Fixed a("101111000110000101001110",2,10); // 12345678
 	cout << a << endl;
 
@@ -63,22 +103,11 @@ int main()
 	tmp.setPrecision(2);
     cout << g << "/" << h << "=" << tmp << endl;
 
-
-    cout << "inf int addition and comparison, only 64bit and positive: " << std::boolalpha << test() << endl;
-    cout << "inf int multiplication, only 64bit: " << std::boolalpha << testMult() << endl;
-    cout << "inf int subtraction, only 64bit and positive: " << std::boolalpha << testMinus() << endl;
-    cout << "Easy Fixed test, only 64bit and positive: " << std::boolalpha << testFixed1() << endl;
-    cout << "shift operators test : " << std::boolalpha << shiftOperatorsTest() << endl;
-    cout << "division algo test : " << std::boolalpha << divisionAlgoTest() << endl;
-
-    cout << "complex +- 64bit infinite integer test : " << std::boolalpha << testInfIntComplex64() << endl;
-    cout << "complex infinite integer test : " << std::boolalpha << testInfIntComplex() << endl;
-
     return 0;
 }
 
 bool testInfIntComplex64() {
-    intInf t1, t2, t3;
+    IntInf t1, t2, t3;
     int64_t x,y,z;
 
     srand(0);
@@ -143,7 +172,7 @@ bool testInfIntComplex64() {
 }
 
 bool testInfIntComplex() {
-    intInf t1, t2, t3;
+    IntInf t1, t2, t3;
 
     srand(0);
 
@@ -182,9 +211,10 @@ bool testInfIntComplex() {
 
 bool shiftOperatorsTest() {
     srand(654654);
-    intInf n;
-    uint64_t test;
-    uint64_t r;
+    IntInf n;
+    uint32_t test;
+    uint64_t res;
+    uint32_t r;
 
     for(uint64_t i = 0; i < 1000*1000; ++i) {
 
@@ -192,19 +222,23 @@ bool shiftOperatorsTest() {
         n = test;
 
         r = rand()%31;
+
         n <<= r;
-        test <<= r;
-        if(n.merge2() != test) {
-            cout << test << " " << n.merge2() << endl;
+        res = test;
+        res <<= r;
+
+        if(n.merge2() != res) {
+            cout << res << " " << n.merge2() << " " << test << " << " << r << endl;
             return false;
         }
 
         r = rand()%31;
-        n >>= r;
-        test >>= r;
 
-        if(n.merge2() != test) {
-            cout << test << " " << n.merge2() << endl;
+        n >>= r;
+        res >>= r;
+
+        if(n.merge2() != res) {
+            cout << res << " " << n.merge2() << " " << " << " << r << endl;
             return false;
         }
     }
@@ -216,11 +250,11 @@ bool shiftOperatorsTest() {
 bool divisionAlgoTest() {
     srand(64645);
 
-    intInf n;
-    intInf d;
-    intInf rem;
+    IntInf n;
+    IntInf d;
+    IntInf rem;
     uint64_t correct = 0;
-    intInf res;
+    IntInf res;
     const uint64_t steps = 1000*10;
 
     for(uint64_t i=0; i<steps; ++i) {
@@ -263,7 +297,7 @@ bool testFixed1() {
 
 bool testMinus() {
     srand(0);
-    intInf t1,t2;
+    IntInf t1,t2;
     uint64_t x,y,res;
 
     for(int i=0; i<1000*1000; i++) {
@@ -302,12 +336,12 @@ bool testMinus() {
 }
 
 bool test() {
-    intInf t1, t2;
+    IntInf t1, t2;
     uint64_t x,y;
 
     srand(0);
 
-    for(int i=0; i<1000*100; i++) {
+    for(int i=0; i<1000*1000; i++) {
         uint32_t n1,n2,n3,n4;
         n1 = UINT32_MAX - rand();
         n2 = UINT32_MAX - rand();
@@ -330,6 +364,7 @@ bool test() {
         x = x + y;
 
         if(x != merge(t1[1], t1[0])) {
+            cout << x << " != " << merge(t1[1], t1[0]) << " " << i << endl;
             return false;
         }
 
@@ -346,7 +381,7 @@ bool test() {
 }
 
 bool testMult() {
-    intInf t1, t2;
+    IntInf t1, t2;
     int64_t x,y;
 
     srand(0);
@@ -372,6 +407,7 @@ bool testMult() {
         x = x * y;
 
         if(x != merge2(t1[1], t1[0], t1.negative )) {
+            cout << x << " != " << merge2(t1[1], t1[0], t1.negative ) << endl;
             return false;
         }
 

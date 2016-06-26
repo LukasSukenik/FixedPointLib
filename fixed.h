@@ -10,19 +10,24 @@
 
 const std::string DIGITS = "0123456789ABCDEF";
 
-class intInf : public std::vector<uint64_t> {
+#define MASK32 0x00000000ffffffff
+
+using std::cout;
+using std::endl;
+
+class IntInf : public std::vector<uint32_t> {
 public:
     bool negative = false;          // negative == true -> number < 0
 
-    intInf() = default;
-    intInf(int32_t n) {
+    IntInf() = default;
+    IntInf(int32_t n) {
         if(n!=0)
             this->push_back(n);
         if(n < 0)
             negative = true;
     }
 
-    bool operator== (const intInf & o) const {
+    bool operator== (const IntInf & o) const {
         if(this->empty() && o.empty())
             return true;
         if(this->empty() || o.empty())
@@ -40,11 +45,11 @@ public:
         return true;
     }
 
-    bool operator!= (const intInf & o) const {
+    bool operator!= (const IntInf & o) const {
         return !(*this == o);
     }
 
-    bool operator< (const intInf & o) const {
+    bool operator< (const IntInf & o) const {
         if(this->empty() && o.empty())
             return false;
 
@@ -67,75 +72,119 @@ public:
         return false; // they are equal
     }
 
-    bool operator> (const intInf & o) const {
+    bool operator> (const IntInf & o) const {
         return o < *this;
     }
 
-    bool operator<= (const intInf & o) const {
+    bool operator<= (const IntInf & o) const {
         return !(o < *this);
     }
 
-    bool operator>= (const intInf & o) const {
+    bool operator>= (const IntInf & o) const {
         return !(*this < o);
     }
 
     //uintInf_t& operator= (uintInf_t o) inherited
 
-    intInf operator% (intInf o) {
-        intInf rem;
-        division3(*this,o, &rem);
-        return rem;
-    }
-
-    intInf operator <<= (const unsigned int shift) {
-        assert(shift <= 32);
-        for(auto& item : *this)
-            item <<= shift;
-        propagateUP();
-        return *this;
-    }
-
-    intInf operator >> (const unsigned int shift) {
-        intInf o(*this);
+    IntInf operator >> (const unsigned int shift) {
+        IntInf o(*this);
         o >>= shift;
         return o;
     }
 
 
-    intInf operator << (const unsigned int shift) {
-        intInf o(*this);
+    IntInf operator << (const unsigned int shift) {
+        IntInf o(*this);
         o <<= shift;
         return o;
     }
 
-    intInf operator >>= (const unsigned int shift) {
-        assert(shift <= 32);
-        uint64_t t1 = 0;
-        uint64_t t2 = 0;
+    /**
+     * @brief operator <<= ( <<=1  equal to *=2)
+     * @param shift
+     * @return
+     */
+    IntInf operator <<= (unsigned int shift) {
+        if(this->empty())
+            return *this;
 
-        for(auto rIt = this->rbegin(); rIt != this->rend(); ++rIt) {
-            t1 = (*rIt << (64-shift)) >> 32;
-            *rIt >>= shift;
-            *rIt += t2;
-            t2 = t1;
+        unsigned int shift32 = shift/32;
+        shift -= (32*shift32);
+        if(shift32 > 0) {
+            this->resize(this->size() + shift32, 0);
+            for(unsigned int i = this->size()-1; i >= shift32; --i) { // i-shift32 >= 0 -> i >= shift32
+                (*this)[i] = (*this)[i-shift32];
+                (*this)[i-shift32] = 0;
+            }
         }
 
-        while(this->back() == 0)
-            this->pop_back();
-        assert(this->back() != 0);
+        if(shift > 0) {
+            this->push_back(0);
+
+            for(unsigned int i = this->size()-1; i > 0; --i) {
+                (*this)[i] += (*this)[i-1] >> (32-shift);
+                (*this)[i-1] <<= shift;
+            }
+
+            if(this->back() == 0)
+                this->pop_back();
+        }
         return *this;
     }
 
-    intInf division3(intInf dividend, intInf divisor, intInf * remainder) {
+    /**
+     * @brief operator >>= ( >>=1  equal to /=2)
+     * @param shift
+     * @return
+     */
+    IntInf operator >>= (unsigned int shift) {
+        if(this->empty())
+            return *this;
+
+        unsigned int shift32 = shift/32;
+        shift -= (32*shift32);
+
+        if(shift32 > 0) {
+            if(this->size() <= shift32) {
+                this->clear();
+                return *this;
+            }
+
+            for(unsigned int i = 0; i < this->size()-shift32; ++i) { // i+shift32 < size()
+                (*this)[i] = (*this)[i+shift32];
+            }
+            this->resize(this->size() - shift32);
+        }
+
+        if(shift > 0) {
+            (*this)[0] >>= shift;
+
+            if(this->size() > 1) {
+                for(unsigned int i = 1; i < this->size(); ++i) {
+                    (*this)[i-1] += (*this)[i] << (32-shift);
+                    (*this)[i] >>= shift;
+                }
+            }
+
+            if(this->back() == 0)
+                this->pop_back();
+        }
+        return *this;
+    }
+
+    IntInf division3(IntInf dividend, IntInf divisor, IntInf * remainder) {
 
         bool res = (dividend.negative || divisor.negative) && !(dividend.negative && divisor.negative);
         dividend.negative = false;
         divisor.negative = false;
-        intInf origdiv = divisor;
-        intInf quotient;
-        intInf sum_q;
+        IntInf origdiv = divisor;
+        IntInf quotient;
+        IntInf sum_q;
         while(true) {
             quotient = 1;
+
+            if(dividend.size() > 100)
+                exit(1);
 
             if (dividend == divisor) {
                 *remainder = 0;
@@ -167,13 +216,20 @@ public:
         return sum_q;
     }
 
-    intInf operator/ (intInf o) {
+
+    IntInf operator% (IntInf o) {
+        IntInf rem;
+        division3(*this,o, &rem);
+        return rem;
+    }
+
+    IntInf operator/ (IntInf o) {
         assert(!o.empty() && "Division by zero");
-        intInf rem;
+        IntInf rem;
         return division3(*this, o, &rem);
     }
 
-    intInf operator+ (intInf o) {
+    IntInf operator+ (IntInf o) {
         if(this->empty() && o.empty())
             return o;
         // some operations with (+) sign are infact (-)
@@ -186,29 +242,29 @@ public:
                 return o - *this;
             }
         }
-        intInf result;
-        result.resize(std::max(o.size(), this->size()));
 
-        for(auto& item : result) {
-            item = 0;
-        }
-        for(unsigned int i=0; i<o.size(); i++) {
-            result[i] += o[i];
-        }
-        for(unsigned int i=0; i<this->size(); i++) {
-            result[i] += (*this)[i];
-        }
-        result.propagateUP();
-        result.negative = this->negative;
+        uint64_t temp;
+        o.resize(std::max( o.size(), this->size()), 0);
+        o.push_back(0);
 
-        while(result.back() == 0) // due to intermediate results of operator *, which have 0 on higher indexes
-            result.pop_back();
-        assert(result.empty() || result.back() != 0);
+        for(unsigned int i=0; i < this->size(); ++i) {
+            temp = (*this)[i];
+            temp += o[i];
 
-        return result;
+            o[i] = ( temp&MASK32 );
+            o[i+1] += ( temp>>32 ); // o is always 1 bigger than *this
+        }
+
+        o.negative = this->negative;
+
+        while(o.back() == 0) // due to intermediate results of operator *, which have 0 on higher indexes
+            o.pop_back();
+        assert(o.empty() || o.back() != 0);
+
+        return o;
     }
 
-    intInf operator- (intInf o) {
+    IntInf operator- (IntInf o) {
         // some operations with (-) sign are infact (+)
         if(this->negative != o.negative) {
             o.negative = this->negative;
@@ -216,82 +272,72 @@ public:
         }
 
         // Problem: We have unsigned integers -> cant go below 0
-        intInf *big, *small;
-        intInf result; // is big - small
+        IntInf *big, *small;
         uint64_t temp = 0;
+        bool equal=false;
 
-        if(*this >= o) {
+        if( !(this->lt(o,equal)) ) { // this >= o
             big = this;
             small = &o;
-            result = *big;
-            result.negative = this->negative;
+            o.negative = this->negative;
         } else {
             big = &o;
             small = this;
-            result = *big;
-            result.negative = !this->negative;
+            o.negative = !this->negative;
         }
+        if(equal)
+            return 0;
 
         assert(big->size() >= small->size());
 
-        for(auto& item : result)
-            item += (1ull<<32);
-        for(unsigned int i=0; i<small->size(); ++i)
-            result[i] -= (*small)[i];
-        for(auto& item : result) {
-            item -= temp;
-            temp = 0;
-            if(item >= (1ull<<32))
-                item -= (1ull<<32);
-            else
-                temp = 1;
+        o.resize(big->size(), 0);
+        o.push_back(0); // for convenience
+        temp = 1ull<<32;
+        for(unsigned int i=0; i < small->size(); ++i) {
+            temp = ((1ull<<32)-1) + (temp>>32); // here temp>>32 == 1 -> we are OK, temp>>32 == 0 -> underflow occured
+            temp += static_cast<uint64_t>( (*big)[i] );
+            temp -= static_cast<uint64_t>( (*small)[i] );
+
+            o[i] = ( temp&MASK32 );
         }
 
-        while(result.back() == 0)
-            result.pop_back();
+        while(o.back() == 0)
+            o.pop_back();
 
-        assert(result.empty() || result.back() != 0);
+        assert(o.empty() || o.back() != 0);
 
-        return result;
+        return o;
     }
 
-    intInf operator* (intInf o)  {
+    IntInf operator* (IntInf o)  {
         if(this->empty() || o.empty())
-            return intInf();
+            return IntInf();
 
-        std::vector<intInf> result;
-	    result.resize(std::max(o.size(), this->size()));
-        for(auto& item : result) {
-            item.resize( o.size() * this->size() );
-        }
+        IntInf result;
+        uint64_t temp = 0;
+        result.resize(o.size() + this->size() +1, 0);
 
-        int batch = 0;
-        for(unsigned int i=0; i < ( o.size() * this->size() ) ; ++i) {
-            result[batch][i] = 0;
-            for(unsigned int j=0; j<o.size(); ++j) {
-                for(unsigned int k=0; k<this->size(); ++k) {
-                    if(i == (j+k)) {
-                        result[batch][i] += o[j] * (*this)[k];
-                        ++batch;
+        for(unsigned int sum = 0; sum < result.size()-1; ++sum) {
+            for(unsigned int i = 0; i < this->size(); ++i) {
+                for(unsigned int j = 0; j < o.size(); ++j) {
+                    if(i+j == sum) {
+                        temp = (*this)[i];
+                        temp *= o[j];
+
+                        result[sum] += ( temp&MASK32 );
+                        result[sum+1] += ( temp>>32 );
                     }
                 }
             }
-            batch = 0;
         }
-        for(auto& item : result) {
-            item.propagateUP();
-        }
-        for(unsigned int i=1; i<std::max(o.size(), this->size()); i++) {
-            result[0] = result[0] + result[i];
-        }
-        result[0].negative = this->negative != o.negative;
 
+        result.negative = this->negative != o.negative;
 
-        while(result[0].back() == 0)
-            result[0].pop_back();
-        assert(result[0].empty() || result[0].back() != 0);
+        while(result.back() == 0)
+            result.pop_back();
+        assert(result.empty() || result.back() != 0);
 
-        return result[0];
+        return result;
     }
 
     uint64_t merge2() const {
@@ -312,30 +358,47 @@ public:
 
 private:
     /**
-     * @brief propagate set the vector elements so that first 32 bits are 0
+     * @brief duplicit operator <, For more effective operator- it is beneficial to know if the numbers are equal
+     * @param o
+     * @return
      */
-    void propagateUP() {
-        uint64_t temp = 0;
-        for(auto& item : *this) {
-            item += temp;
-            temp = item;
-            temp >>= 32;
-            item <<= 32;
-            item >>= 32;
+    bool lt (const IntInf & o, bool& equal) const {
+        if(this->empty() && o.empty())
+            return false;
+        equal = false;
+
+        //assert(o.back() !=0 && this->back() != 0);
+        if(!this->negative && o.negative) // (+) < (-)
+            return false;
+        if(this->negative && !o.negative) // (-) < (+)
+            return true;
+        if(o.size() > this->size())
+            return true;
+        if(o.size() < this->size())
+            return false;
+        for(int i=this->size()-1; i>=0; --i) {
+            if((*this)[i] < o[i])
+                return true;
+            if((*this)[i] > o[i])
+                return false;
+            // equal continue on lesser numbers
         }
-        if(temp != 0)
-            this->push_back(temp);
+        equal = true;
+        return false; // they are equal
     }
 };
 
-std::ostream& operator<<(std::ostream& o, const intInf & u) {
+std::ostream& operator<<(std::ostream& o, const IntInf & u) {
+    if(u.empty()) {
+        o << std::bitset<32>(0);
+    }
     for(auto rIt = u.rbegin(); rIt != u.rend(); ++rIt)
         o << std::bitset<32>(*rIt);
     return o;
 }
 
-intInf gcd (intInf n1, intInf n2) {
-    intInf tmp;
+IntInf gcd (IntInf n1, IntInf n2) {
+    IntInf tmp;
     n1.negative = false;
     n2.negative = false;
     while (n2 != 0) {
@@ -368,11 +431,11 @@ public:
 		    this->num = f1.num * f2.scale;
             this->scale = f1.scale * f2.num ;
 	    }
-	    else if (num.empty()) {
+        else if (num.empty()) {
 		    this->num = 0;
 		    this->scale = 1;
-	    }
-	    else {
+        }
+        else {
 		    convertInput(num);
 	    }
         minimizeFraction();
@@ -452,13 +515,13 @@ public:
     }
 
     Fixed& operator++ () { // prefix
-        intInf inc = this->scale;
+        IntInf inc = this->scale;
         inc.negative = false;
         this->num = this->num + inc;
         return *this;
     }
     Fixed& operator-- () {
-        intInf inc = this->scale;
+        IntInf inc = this->scale;
         inc.negative = true;
         this->num = this->num + inc;
         return *this;
@@ -522,15 +585,17 @@ public:
 private:
     // https://en.wikipedia.org/wiki/Fixed-point_arithmetic
     //
-	intInf num;   // numerator, only last 32 bits are valid, rest 0
-    intInf scale; // denominator
+    IntInf num;   // numerator, only last 32 bits are valid, rest 0
+    IntInf scale; // denominator
 
     uint32_t ibase; // input base, 2 to 16
 	uint32_t obase; // outputbase, 2 to 999
 	uint32_t precision;
 
     void minimizeFraction() {
-        intInf gcdNum = gcd(this->num, this->scale);
+        if(this->scale == 1)
+            return;
+        IntInf gcdNum = gcd(this->num, this->scale);
         this->scale = this->scale / gcdNum;
         this->num = this->num / gcdNum;
     }
@@ -554,12 +619,12 @@ private:
 		std::string fracStr = (point != std::string::npos) ? num.substr(point+1) : "";
 
 		//convert integral part to decimal number
-        intInf intPart(0);
-        intInf power(1);
+        IntInf intPart(0);
+        IntInf power(1);
 		for (unsigned long i = 0; i < intStr.length(); ++i) {
 			auto digit = DIGITS.find(intStr[intStr.length()-i-1]);
-            intPart = intPart + power * intInf(digit);
-            power = power * intInf(this->ibase);
+            intPart = intPart + power * IntInf(digit);
+            power = power * IntInf(this->ibase);
 		}
 		this->num = intPart;
 		this->scale = 1;
@@ -573,15 +638,15 @@ private:
 		for (unsigned long i = 0; i < fracStr.length(); ++i) {
 			auto digit = DIGITS.find(fracStr[i]);
 			tmp.num = digit;
-            tmp.scale = tmp.scale * intInf(this->ibase);
+            tmp.scale = tmp.scale * IntInf(this->ibase);
 			*this += tmp;
 		}
 	}
 
-    std::string integerToString(intInf integer) const {
+    std::string integerToString(IntInf integer) const {
 	    std::string integral;
 		while (integer > 0) {
-            auto remainder = (integer % intInf(this->obase));
+            auto remainder = (integer % IntInf(this->obase));
 			auto cipher = (remainder.size() != 0) ? remainder.back() : 0;
 
 			if (this->obase <= 16) {
@@ -591,18 +656,18 @@ private:
 				integral = " " + leadingZeros(cipher) + integral;
 			}
 
-            integer = integer / intInf(this->obase);
+            integer = integer / IntInf(this->obase);
 		}
 
 		return ((this->num.negative) ? "-" : "") + integral;
 	}
 
-    std::string fractionToString(intInf fraction) const {
+    std::string fractionToString(IntInf fraction) const {
 	    std::string fractPart;
 		uint32_t i = 0;
 		while (fraction != 0 && i != this->precision) {
-            fraction = fraction * intInf(this->obase);
-            intInf division = fraction / this->scale;
+            fraction = fraction * IntInf(this->obase);
+            IntInf division = fraction / this->scale;
 			auto cipher = (division.size() != 0) ? division.back() : 0;
 			fraction = fraction % this->scale;
 
