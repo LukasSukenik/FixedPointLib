@@ -293,8 +293,10 @@ public:
         o.resize(big->size(), 0);
         o.push_back(0); // for convenience
         temp = 1ull<<32;
-        for(unsigned int i=0; i < small->size(); ++i) {
+        for(unsigned int i=0; i < this->size(); ++i) {
             temp = ((1ull<<32)-1) + (temp>>32); // here temp>>32 == 1 -> we are OK, temp>>32 == 0 -> underflow occured
+            assert(i >= 0);
+            assert(i < big->size());
             temp += static_cast<uint64_t>( (*big)[i] );
             temp -= static_cast<uint64_t>( (*small)[i] );
 
@@ -323,9 +325,11 @@ public:
                     if(i+j == sum) {
                         temp = (*this)[i];
                         temp *= o[j];
-
-                        result[sum] += ( temp&MASK32 );
-                        result[sum+1] += ( temp>>32 );
+                        for(unsigned int k = sum; k < result.size(); ++k) {
+                            temp += result[k];
+                            result[k] = ( temp&MASK32 );
+                            temp >>= 32;
+                        }
                     }
                 }
             }
