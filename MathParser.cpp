@@ -57,11 +57,6 @@ void MathParser::runInteractiveMode() {
 bool MathParser::parseAndEvaluate(const std::string & line, Fixed & result) {
 	//tokenize input
 	auto tokens = tokenize(line);
-	/*std::cout << "Infix: ";
-	for (auto &token : tokens) {
-		std::cout << '"' << token << "\" ";
-	}
-	std::cout << std::endl;*/
 
 	//convert infix to rpn
 	std::vector<std::string> rpn;
@@ -69,11 +64,6 @@ bool MathParser::parseAndEvaluate(const std::string & line, Fixed & result) {
 		std::cout << "Mismatched braces" << std::endl;
 		return false;
 	}
-	/*std::cout << "Rpn: ";
-	for (auto &token : rpn) {
-		std::cout << '"' << token << "\" ";
-	}
-	std::cout << std::endl;*/
 
 	//evaluate rpn
 	return evaluateRPN(rpn, result);
@@ -85,7 +75,6 @@ std::vector< std::string > MathParser::tokenize(const std::string & expression) 
 
 	for (uint64_t i = 0; i < expression.length(); ++i) {
 		std::string token(1, expression[i]);
-		//std::cout << i << ":" << expression[i] << std::endl;
 
 		if (i < expression.length()-1 && isOperator(token + std::string(1,expression[i+1]))){
 			std::string unary(token + std::string(1,expression[i+1]));
@@ -256,11 +245,6 @@ bool MathParser::evaluateRPN(const std::vector < std::string > & rpn, Fixed & ou
 	if (!stack.empty()) {
 		std::cout << "Syntax error" << std::endl;
 
-		//print remaining stack
-		/*while (!stack.empty()) {
-			std::cout << stack.top() << " ";
-			stack.pop();
-		}*/
 		return false;
 	}
 	return true;
