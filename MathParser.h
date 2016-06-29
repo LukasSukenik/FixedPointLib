@@ -27,36 +27,29 @@ public:
 
 	using VariableTable = std::map< std::string, Fixed >;
 
-	MathParser() : ibase(10), obase(10), precision(20) {
-		const std::array<OperatorTable::value_type, 22> oper
-		{
-			OperatorTable::value_type("*=",  std::make_tuple(1, 1, Assoc::right_to_left) ),
-			OperatorTable::value_type("/=",  std::make_tuple(1, 1, Assoc::right_to_left) ),
-			OperatorTable::value_type("+=",  std::make_tuple(1, 1, Assoc::right_to_left) ),
-			OperatorTable::value_type("-=",  std::make_tuple(1, 1, Assoc::right_to_left) ),
-			OperatorTable::value_type("=",   std::make_tuple(1, 1, Assoc::right_to_left) ),
-			OperatorTable::value_type("==",  std::make_tuple(2, 2, Assoc::left_to_right) ),
-			OperatorTable::value_type("!=",  std::make_tuple(2, 2, Assoc::left_to_right) ),
-			OperatorTable::value_type(">",   std::make_tuple(3, 2, Assoc::left_to_right) ),
-			OperatorTable::value_type(">=",  std::make_tuple(3, 2, Assoc::left_to_right) ),
-			OperatorTable::value_type("<",   std::make_tuple(3, 2, Assoc::left_to_right) ),
-			OperatorTable::value_type("<=",  std::make_tuple(3, 2, Assoc::left_to_right) ),
-			OperatorTable::value_type("+",   std::make_tuple(4, 2, Assoc::left_to_right) ),
-			OperatorTable::value_type("-",   std::make_tuple(4, 2, Assoc::left_to_right) ),
-			OperatorTable::value_type("*",   std::make_tuple(5, 2, Assoc::left_to_right) ),
-			OperatorTable::value_type("/",   std::make_tuple(5, 2, Assoc::left_to_right) ),
-			OperatorTable::value_type("++a", std::make_tuple(6, 1, Assoc::right_to_left) ),
-			OperatorTable::value_type("--a", std::make_tuple(6, 1, Assoc::right_to_left) ),
-			OperatorTable::value_type("a++", std::make_tuple(7, 1, Assoc::left_to_right) ),
-			OperatorTable::value_type("a--", std::make_tuple(7, 1, Assoc::left_to_right) ),
-			OperatorTable::value_type("-a",  std::make_tuple(8, 1, Assoc::right_to_left) ),
-			OperatorTable::value_type("++",  std::make_tuple(9, 0, Assoc::left_to_right) ),
-			OperatorTable::value_type("--",  std::make_tuple(9, 0, Assoc::left_to_right) )
-		};
-
-		operators.reserve(oper.size());
-		operators.insert(std::begin(oper), std::end(oper));
-	}
+    MathParser() : operators({OperatorTable::value_type("*=",  std::make_tuple(1, 1, Assoc::right_to_left) ),
+                             OperatorTable::value_type("/=",  std::make_tuple(1, 1, Assoc::right_to_left) ),
+                             OperatorTable::value_type("+=",  std::make_tuple(1, 1, Assoc::right_to_left) ),
+                             OperatorTable::value_type("-=",  std::make_tuple(1, 1, Assoc::right_to_left) ),
+                             OperatorTable::value_type("=",   std::make_tuple(1, 1, Assoc::right_to_left) ),
+                             OperatorTable::value_type("==",  std::make_tuple(2, 2, Assoc::left_to_right) ),
+                             OperatorTable::value_type("!=",  std::make_tuple(2, 2, Assoc::left_to_right) ),
+                             OperatorTable::value_type(">",   std::make_tuple(3, 2, Assoc::left_to_right) ),
+                             OperatorTable::value_type(">=",  std::make_tuple(3, 2, Assoc::left_to_right) ),
+                             OperatorTable::value_type("<",   std::make_tuple(3, 2, Assoc::left_to_right) ),
+                             OperatorTable::value_type("<=",  std::make_tuple(3, 2, Assoc::left_to_right) ),
+                             OperatorTable::value_type("+",   std::make_tuple(4, 2, Assoc::left_to_right) ),
+                             OperatorTable::value_type("-",   std::make_tuple(4, 2, Assoc::left_to_right) ),
+                             OperatorTable::value_type("*",   std::make_tuple(5, 2, Assoc::left_to_right) ),
+                             OperatorTable::value_type("/",   std::make_tuple(5, 2, Assoc::left_to_right) ),
+                             OperatorTable::value_type("++a", std::make_tuple(6, 1, Assoc::right_to_left) ),
+                             OperatorTable::value_type("--a", std::make_tuple(6, 1, Assoc::right_to_left) ),
+                             OperatorTable::value_type("a++", std::make_tuple(7, 1, Assoc::left_to_right) ),
+                             OperatorTable::value_type("a--", std::make_tuple(7, 1, Assoc::left_to_right) ),
+                             OperatorTable::value_type("-a",  std::make_tuple(8, 1, Assoc::right_to_left) ),
+                             OperatorTable::value_type("++",  std::make_tuple(9, 0, Assoc::left_to_right) ),
+                             OperatorTable::value_type("--",  std::make_tuple(9, 0, Assoc::left_to_right) )}),
+        ibase(10), obase(10), precision(20) {}
 
 	void runInteractiveMode();
 
