@@ -10,10 +10,8 @@
 
 const std::string DIGITS = "0123456789ABCDEF";
 
-#define MASK32 0x00000000ffffffff
+const uint64_t mask32 = std::numeric_limits<uint32_t>::max();
 
-using std::cout;
-using std::endl;
 
 class IntInf : public std::vector<uint32_t> {
 public:
@@ -53,7 +51,6 @@ public:
         if(this->empty() && o.empty())
             return false;
 
-        //assert(o.back() !=0 && this->back() != 0);
 	    if(!this->negative && o.negative) // (+) < (-)
 		    return false;
 	    if(this->negative && !o.negative) // (-) < (+)
@@ -251,7 +248,7 @@ public:
             temp = (*this)[i];
             temp += o[i];
 
-            o[i] = ( temp&MASK32 );
+            o[i] = ( temp & mask32 );
             o[i+1] += ( temp>>32 ); // o is always 1 bigger than *this
         }
 
@@ -295,12 +292,11 @@ public:
         temp = 1ull<<32;
         for(unsigned int i=0; i < this->size(); ++i) {
             temp = ((1ull<<32)-1) + (temp>>32); // here temp>>32 == 1 -> we are OK, temp>>32 == 0 -> underflow occured
-            assert(i >= 0);
             assert(i < big->size());
             temp += static_cast<uint64_t>( (*big)[i] );
             temp -= static_cast<uint64_t>( (*small)[i] );
 
-            o[i] = ( temp&MASK32 );
+            o[i] = ( temp & mask32 );
         }
 
         while(o.back() == 0)
@@ -327,7 +323,7 @@ public:
                         temp *= o[j];
                         for(unsigned int k = sum; k < result.size(); ++k) {
                             temp += result[k];
-                            result[k] = ( temp&MASK32 );
+                            result[k] = ( temp & mask32 );
                             temp >>= 32;
                         }
                     }
@@ -371,7 +367,6 @@ private:
             return false;
         equal = false;
 
-        //assert(o.back() !=0 && this->back() != 0);
         if(!this->negative && o.negative) // (+) < (-)
             return false;
         if(this->negative && !o.negative) // (-) < (+)

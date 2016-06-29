@@ -35,22 +35,24 @@ int64_t merge2(uint32_t i, uint32_t j, bool negative) {
 
 int main()
 {   
+    cout << 0x00000000ffffffff << endl;
+    cout << std::numeric_limits<uint32_t>::max() << endl;
 
-    //cout << "shift operators test : " << std::boolalpha << shiftOperatorsTest() << endl;
+    cout << "shift operators test : " << std::boolalpha << shiftOperatorsTest() << endl;
 
-    /*cout << Fixed("1957747793") * Fixed("1714636915") / Fixed("1681692777") / Fixed("846930886") / Fixed("1804289383") << endl;
+    cout << Fixed("1957747793") * Fixed("1714636915") / Fixed("1681692777") / Fixed("846930886") / Fixed("1804289383") << endl;
     cout << Fixed("1189641421") * Fixed("596516649") / Fixed("1649760492") / Fixed("719885386") / Fixed("424238335") << endl;
     cout << Fixed("2044897763") * Fixed("1102520059") / Fixed("783368690") / Fixed("1350490027") / Fixed("1025202362")  << "" << endl;
     cout << Fixed("1303455736") * Fixed("304089172") / Fixed("1540383426") / Fixed("1365180540") / Fixed("1967513926") << endl;
     cout << Fixed("336465782") * Fixed("1726956429") / Fixed("294702567") / Fixed("521595368") / Fixed("35005211") << endl;
-    cout << Fixed("468703135") * Fixed("2145174067") / Fixed("233665123") / Fixed("278722862") / Fixed("861021530") << endl;*/
+    cout << Fixed("468703135") * Fixed("2145174067") / Fixed("233665123") / Fixed("278722862") / Fixed("861021530") << endl;
 
-    //cout << Fixed("1957747793") * Fixed("1714636915") * Fixed("1681692777") * Fixed("846930886") / Fixed("1804289383") << endl;
-    //cout << Fixed("1189641421") * Fixed("596516649") * Fixed("1649760492") * Fixed("719885386") / Fixed("424238335") << endl;
+    cout << Fixed("1957747793") * Fixed("1714636915") * Fixed("1681692777") * Fixed("846930886") / Fixed("1804289383") << endl;
+    cout << Fixed("1189641421") * Fixed("596516649") * Fixed("1649760492") * Fixed("719885386") / Fixed("424238335") << endl;
 
     cout << Fixed("1766136674858487348313587730") * Fixed("1350490027") << " == 2385149965715328800203175497954568710"<< endl;
 
-    /*cout << Fixed("2044897763") * Fixed("1102520059") << " == 2254540802311728017"<< endl;
+    cout << Fixed("2044897763") * Fixed("1102520059") << " == 2254540802311728017"<< endl;
     cout << Fixed("2044897763") * Fixed("1102520059") * Fixed("783368690") << " == 1766136674858487348313587730"<< endl;
 
     cout << Fixed("2044897763") * Fixed("1102520059") * Fixed("783368690") * Fixed("1350490027") << " == 2385149965715328800203175497954568710"<< endl;
@@ -60,11 +62,11 @@ int main()
     cout << Fixed("1303455736") * Fixed("304089172") * Fixed("1540383426") * Fixed("1365180540") / Fixed("1967513926") << endl;
     cout << Fixed("336465782") * Fixed("1726956429") * Fixed("294702567") * Fixed("521595368") / Fixed("35005211") << endl;
     cout << Fixed("468703135") * Fixed("2145174067") * Fixed("233665123") * Fixed("278722862") / Fixed("861021530") << endl;
-    cout << Fixed("1369133069") * Fixed("635723058") * Fixed("1315634022") * Fixed("1801979802") / Fixed("1101513929") << endl;*/
+    cout << Fixed("1369133069") * Fixed("635723058") * Fixed("1315634022") * Fixed("1801979802") / Fixed("1101513929") << endl;
 
 
 
-    /*Fixed aaa("-100000000000000000000000");
+    Fixed aaa("-100000000000000000000000");
     Fixed bbb("1");
     if(aaa > bbb)
         cout << "-100000000000000000000000 > 1 : " << "TRUE" << endl;
@@ -110,7 +112,7 @@ cout << "division algo test : " << std::boolalpha << divisionAlgoTest() << endl;
 	Fixed h("20");
 	Fixed tmp = g/h; //-1.05
 	tmp.setPrecision(2);
-    cout << g << "/" << h << "=" << tmp << endl;*/
+    cout << g << "/" << h << "=" << tmp << endl;
 
     return 0;
 }
